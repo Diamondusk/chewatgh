@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบจัดการสถานชีวาภิบาล วัดทับคล้อ</title>
+    <title>ระบบจัดการสถานชีวาภิบาล วัดทับคล้อ (Supabase)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Phosphor Icons -->
@@ -12,6 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- SheetJS (Excel Export) -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
@@ -52,8 +54,8 @@
                 <span>เพิ่มผู้ป่วยใหม่</span>
             </button>
         </nav>
-        <div class="p-4 border-t border-gray-100 text-xs text-gray-400 text-center">
-            Palliative Care System v1.1<br>(In-Memory State)
+        <div class="p-4 border-t border-gray-100 text-xs text-green-600 font-medium text-center bg-green-50">
+            <i class="ph ph-cloud-check"></i> Connected to Supabase
         </div>
     </aside>
 
@@ -77,59 +79,16 @@
     </main>
 
     <script>
+        // --- SUPABASE SETUP ---
+        const SUPABASE_URL = 'https://hompmaasqrbuwxejswun.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvbXBtYWFzcXJidXd4ZWpzd3VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMjY5NTAsImV4cCI6MjA5NTkwMjk1MH0.QvnuDBUU5g_EZtE3Vkc_1hc7xXmZlvrIR0eFRGqpaQM';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         // --- DATA & STATE MANAGEMENT ---
-        const MOCK_PATIENTS = [
-            {
-                id: 'P001', hn: '660001', name: 'นายบุญมี รักดี', age: 78, gender: 'ชาย', 
-                patientType: 'Palliative Care', admissionDate: '2023-10-12', 
-                diagnosis: 'CA Lung with Bone Mets', underlyingDiseases: 'HT, DLP', 
-                adlScore: 'พึ่งพิงสมบูรณ์ (0-4)', insurance: 'บัตรทอง',
-                relativeName: 'นางสมหญิง รักดี', relativePhone: '081-234-5678', relativeRelation: 'ภรรยา',
-                acp: 'ต้องการการดูแลแบบประคับประคองที่สถานชีวาภิบาล ไม่ต้องการกลับบ้าน',
-                polst: 'DNR (Do Not Resuscitate), No Intubation',
-                medReconcile: 'หยุดยาลดไขมันแล้ว',
-                medicationsList: [
-                    { name: 'Morphine', dosage: '10mg', frequency: 'ทุก 4 ชม.' },
-                    { name: 'Senna', dosage: '2 tab', frequency: 'ก่อนนอน (hs)' }
-                ],
-                bloodTestsList: [
-                    { year: 2565, fbs: 110, hba1c: 6.4, egfr: 75.2, chol: 210, hdl: 45, ldl: 130, tg: 160 },
-                    { year: 2566, fbs: 105, hba1c: 6.1, egfr: 78.5, chol: 198, hdl: 48, ldl: 120, tg: 145 },
-                    { year: 2567, fbs: 98, hba1c: 5.8, egfr: 82.1, chol: 190, hdl: 52, ldl: 110, tg: 130 }
-                ],
-                notes: 'มีอาการปวดกระดูกสันหลังรบกวนเวลานอน'
-            },
-            {
-                id: 'P002', hn: '660045', name: 'นางสมศรี ใจเย็น', age: 85, gender: 'หญิง', 
-                patientType: 'Elderly Care', admissionDate: '2023-11-05', 
-                diagnosis: 'Vascular Dementia', underlyingDiseases: 'DM, HT, Stroke', 
-                adlScore: 'พึ่งพิงบางส่วน (5-11)', insurance: 'ข้าราชการ',
-                relativeName: 'นายสมชาย ใจเย็น', relativePhone: '089-876-5432', relativeRelation: 'บุตรชาย',
-                acp: 'ปฏิเสธการใส่สายยางให้อาหาร หากกลืนไม่ได้ให้ IV fluid',
-                polst: 'Full Code',
-                medReconcile: 'ปรับยาเบาหวานตาม FBS',
-                medicationsList: [
-                    { name: 'Amlodipine', dosage: '5mg', frequency: 'วันละครั้ง เช้า' },
-                    { name: 'Metformin', dosage: '500mg', frequency: 'วันละครั้ง หลังอาหารเช้า' }
-                ],
-                bloodTestsList: [
-                    { year: 2566, fbs: 125, hba1c: 7.2, egfr: 64.0, chol: 185, hdl: 40, ldl: 112, tg: 175 },
-                    { year: 2567, fbs: 118, hba1c: 6.9, egfr: 68.3, chol: 178, hdl: 43, ldl: 105, tg: 162 }
-                ],
-                notes: 'สับสนช่วงเย็น (Sundowning)'
-            }
-        ];
-
-        const MOCK_RECORDS = [
-            { id: 1, patientId: 'P001', date: '2023-11-20', bp: '110/70', hr: '88', rr: '22', temp: '37.1', o2: '95', pain: 6, dyspnea: 4, depression: 2, constipation: 0, note: 'ปวดหลังมากขึ้น ขอยาแก้ปวดเพิ่ม' },
-            { id: 2, patientId: 'P001', date: '2023-11-21', bp: '105/65', hr: '85', rr: '20', temp: '36.8', o2: '96', pain: 3, dyspnea: 2, depression: 2, constipation: 5, note: 'ปวดลดลงหลังปรับยา แต่เริ่มมีอาการท้องผูก' },
-            { id: 3, patientId: 'P002', date: '2023-11-21', bp: '130/80', hr: '76', rr: '18', temp: '36.5', o2: '98', pain: 0, dyspnea: 0, depression: 0, constipation: 0, note: 'ทานอาหารได้น้อยลง มีอาการสำลักน้ำ' }
-        ];
-
         const state = {
             currentView: 'dashboard',
-            patients: [...MOCK_PATIENTS],
-            dailyRecords: [...MOCK_RECORDS],
+            patients: [],
+            dailyRecords: [],
             selectedPatientId: null,
             detailTab: 'info' // info, medical, records
         };
@@ -137,6 +96,27 @@
         // Temporary arrays used in Patient Form to hold medications & blood tests dynamically
         window.tempMedications = [];
         window.tempBloodTests = [];
+
+        // --- FETCH DATA FROM SUPABASE ---
+        async function fetchInitialData() {
+            try {
+                // ดึงข้อมูลผู้ป่วย
+                const { data: patientsData, error: err1 } = await supabaseClient.from('patients').select('*');
+                if (err1) throw err1;
+                state.patients = patientsData || [];
+
+                // ดึงข้อมูลบันทึกรายวัน
+                const { data: recordsData, error: err2 } = await supabaseClient.from('daily_records').select('*');
+                if (err2) throw err2;
+                state.dailyRecords = recordsData || [];
+
+                // วาดหน้าจอใหม่หลังจากได้ข้อมูล
+                render();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                alert('ไม่สามารถดึงข้อมูลจาก Supabase ได้ (โปรดตรวจสอบการตั้งค่า RLS ใน Supabase)');
+            }
+        }
 
         // --- UTILITIES ---
         const formatDate = (dateStr) => {
@@ -210,12 +190,12 @@
         // 1. DASHBOARD
         function renderDashboard(container) {
             const totalPatients = state.patients.length;
-            const palliativeCount = state.patients.filter(p => p.patientType.includes('Palliative')).length;
+            const palliativeCount = state.patients.filter(p => p.patientType && p.patientType.includes('Palliative')).length;
             
             let adlCounts = { 'พึ่งพิงสมบูรณ์': 0, 'พึ่งพิงบางส่วน': 0, 'ช่วยเหลือตัวเองได้': 0 };
             state.patients.forEach(p => {
-                if(p.adlScore.includes('สมบูรณ์')) adlCounts['พึ่งพิงสมบูรณ์']++;
-                else if(p.adlScore.includes('บางส่วน')) adlCounts['พึ่งพิงบางส่วน']++;
+                if(p.adlScore && p.adlScore.includes('สมบูรณ์')) adlCounts['พึ่งพิงสมบูรณ์']++;
+                else if(p.adlScore && p.adlScore.includes('บางส่วน')) adlCounts['พึ่งพิงบางส่วน']++;
                 else adlCounts['ช่วยเหลือตัวเองได้']++;
             });
 
@@ -253,7 +233,9 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                         <h4 class="font-semibold text-gray-700 mb-4">สัดส่วนผู้ป่วยตามระดับ ADL</h4>
-                        <div class="h-64 flex justify-center"><canvas id="adlChart"></canvas></div>
+                        <div class="h-64 flex justify-center">
+                            ${totalPatients === 0 ? '<p class="text-gray-400 mt-20">รอข้อมูล...</p>' : '<canvas id="adlChart"></canvas>'}
+                        </div>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                         <h4 class="font-semibold text-gray-700 mb-4">แนวโน้มอาการเฉลี่ย (7 วันล่าสุด)</h4>
@@ -264,27 +246,28 @@
 
             // Draw Charts after DOM update
             setTimeout(() => {
-                // ADL Chart
-                new Chart(document.getElementById('adlChart'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['พึ่งพิงสมบูรณ์', 'พึ่งพิงบางส่วน', 'ช่วยเหลือตัวเองได้'],
-                        datasets: [{
-                            data: [adlCounts['พึ่งพิงสมบูรณ์'], adlCounts['พึ่งพิงบางส่วน'], adlCounts['ช่วยเหลือตัวเองได้']],
-                            backgroundColor: ['#f97316', '#eab308', '#22c55e']
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-                });
+                if(totalPatients > 0) {
+                    new Chart(document.getElementById('adlChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['พึ่งพิงสมบูรณ์', 'พึ่งพิงบางส่วน', 'ช่วยเหลือตัวเองได้'],
+                            datasets: [{
+                                data: [adlCounts['พึ่งพิงสมบูรณ์'], adlCounts['พึ่งพิงบางส่วน'], adlCounts['ช่วยเหลือตัวเองได้']],
+                                backgroundColor: ['#f97316', '#eab308', '#22c55e']
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                    });
+                }
 
-                // Mock Average Symptoms
+                // Average Symptoms (Using static demo values or can be calculated from state.dailyRecords in future)
                 new Chart(document.getElementById('symptomChart'), {
                     type: 'bar',
                     data: {
                         labels: ['ปวด (Pain)', 'เหนื่อย (Dyspnea)', 'ซึมเศร้า (Depression)', 'ท้องผูก (Constipation)'],
                         datasets: [{
                             label: 'คะแนนความรุนแรงเฉลี่ย (0-10)',
-                            data: [3.5, 2.0, 1.5, 4.2], // Mock avg data
+                            data: [3.5, 2.0, 1.5, 4.2], // Demo avg data
                             backgroundColor: ['#ef4444', '#3b82f6', '#64748b', '#a855f7']
                         }]
                     },
@@ -302,11 +285,11 @@
                 
                 return `
                     <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                        <td class="py-4 px-4 text-sm text-gray-600">${p.hn}</td>
-                        <td class="py-4 px-4 font-medium text-gray-800">${p.name}</td>
-                        <td class="py-4 px-4 text-sm text-gray-600">${p.age} / ${p.gender}</td>
+                        <td class="py-4 px-4 text-sm text-gray-600">${p.hn || '-'}</td>
+                        <td class="py-4 px-4 font-medium text-gray-800">${p.name || '-'}</td>
+                        <td class="py-4 px-4 text-sm text-gray-600">${p.age || '-'} / ${p.gender || '-'}</td>
                         <td class="py-4 px-4 text-sm text-gray-600">${p.diagnosis || '-'}</td>
-                        <td class="py-4 px-4 text-sm text-gray-600">${p.adlScore}</td>
+                        <td class="py-4 px-4 text-sm text-gray-600">${p.adlScore || '-'}</td>
                         <td class="py-4 px-4">${dnrBadge}</td>
                         <td class="py-4 px-4 flex gap-2">
                             <button onclick="navigate('patient-detail', {patientId: '${p.id}'})" class="px-3 py-1.5 bg-sky-100 text-sky-700 rounded-lg text-sm hover:bg-sky-200 transition">รายละเอียด</button>
@@ -342,7 +325,7 @@
                             </thead>
                             <tbody id="patient-table-body">${trs}</tbody>
                         </table>
-                        <div id="no-patients-alert" class="hidden text-center py-8 text-gray-500">ไม่มีข้อมูลผู้ป่วย</div>
+                        <div id="no-patients-alert" class="${state.patients.length === 0 ? '' : 'hidden'} text-center py-8 text-gray-500">ไม่มีข้อมูลผู้ป่วย</div>
                     </div>
                 </div>
             `;
@@ -350,8 +333,8 @@
 
         window.handleSearch = function(query) {
             const filtered = state.patients.filter(p => 
-                p.hn.toLowerCase().includes(query.toLowerCase()) ||
-                p.name.toLowerCase().includes(query.toLowerCase()) ||
+                (p.hn && p.hn.toLowerCase().includes(query.toLowerCase())) ||
+                (p.name && p.name.toLowerCase().includes(query.toLowerCase())) ||
                 (p.diagnosis && p.diagnosis.toLowerCase().includes(query.toLowerCase())) ||
                 (p.underlyingDiseases && p.underlyingDiseases.toLowerCase().includes(query.toLowerCase()))
             );
@@ -545,7 +528,7 @@
                                 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2 items-end pt-2 border-t border-gray-200">
                                     <div>
                                         <label class="block text-[10px] text-gray-500">ปี พ.ศ.</label>
-                                        <input type="number" id="add_blood_year" class="w-full px-2 py-1 text-xs border bg-white rounded" placeholder="2569" value="2569">
+                                        <input type="number" id="add_blood_year" class="w-full px-2 py-1 text-xs border bg-white rounded" placeholder="2569" value="${new Date().getFullYear() + 543}">
                                     </div>
                                     <div>
                                         <label class="block text-[10px] text-gray-500">FBS</label>
@@ -603,7 +586,7 @@
 
                         <div class="flex justify-end gap-3 pt-6 border-t border-gray-100">
                             <button type="button" onclick="navigate('patients')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition">ยกเลิก</button>
-                            <button type="submit" class="px-6 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition shadow-sm font-medium">บันทึกข้อมูล</button>
+                            <button type="submit" class="px-6 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition shadow-sm font-medium">บันทึกข้อมูล (Save to Cloud)</button>
                         </div>
                     </form>
                 </div>
@@ -708,14 +691,18 @@
             window.renderTempBloodTests();
         };
 
-        // --- SAVE MAIN FORM ---
-        window.handleSavePatient = function(e) {
+        // --- SAVE MAIN FORM TO SUPABASE ---
+        window.handleSavePatient = async function(e) {
             e.preventDefault();
-            const id = document.getElementById('f_id').value;
+            const idInput = document.getElementById('f_id').value;
+            // สร้าง ID ใหม่ถ้าเป็นการเพิ่มผู้ป่วยใหม่
+            const newId = idInput ? idInput : 'P' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+
             const newData = {
+                id: newId,
                 hn: document.getElementById('f_hn').value,
                 name: document.getElementById('f_name').value,
-                age: document.getElementById('f_age').value,
+                age: parseInt(document.getElementById('f_age').value) || null,
                 gender: document.getElementById('f_gender').value,
                 insurance: document.getElementById('f_insurance').value,
                 admissionDate: document.getElementById('f_admission').value,
@@ -729,21 +716,22 @@
                 medReconcile: document.getElementById('f_medReconcile').value,
                 polst: document.getElementById('f_polst').value,
                 acp: document.getElementById('f_acp').value,
-                medicationsList: [...window.tempMedications],
-                bloodTestsList: [...window.tempBloodTests]
+                medicationsList: [...window.tempMedications], // บันทึกเป็น jsonb
+                bloodTestsList: [...window.tempBloodTests]    // บันทึกเป็น jsonb
             };
 
-            if(id) {
-                // Update
-                const idx = state.patients.findIndex(p => p.id === id);
-                state.patients[idx] = { ...state.patients[idx], ...newData };
-            } else {
-                // Insert
-                newData.id = 'P' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-                state.patients.push(newData);
+            try {
+                // บันทึกลง Supabase
+                const { error } = await supabaseClient.from('patients').upsert(newData);
+                if (error) throw error;
+
+                alert('บันทึกข้อมูลผู้ป่วยสำเร็จ!');
+                await fetchInitialData(); // รีเฟรชข้อมูลใหม่
+                navigate('patients');
+            } catch (error) {
+                console.error('Error saving patient:', error);
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
             }
-            alert('บันทึกข้อมูลผู้ป่วยสำเร็จ!');
-            navigate('patients');
         };
 
         // 4. PATIENT DETAIL
@@ -783,10 +771,10 @@
                         <div>
                             <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">ข้อมูลเบื้องต้น</h4>
                             <div class="bg-gray-50 p-4 rounded-xl space-y-3 text-sm">
-                                <div class="flex justify-between"><span class="text-gray-500">HN:</span> <span class="font-medium">${p.hn}</span></div>
-                                <div class="flex justify-between"><span class="text-gray-500">อายุ/เพศ:</span> <span>${p.age} ปี / ${p.gender}</span></div>
-                                <div class="flex justify-between"><span class="text-gray-500">ประเภท:</span> <span>${p.patientType}</span></div>
-                                <div class="flex justify-between"><span class="text-gray-500">ระดับ ADL:</span> <span>${p.adlScore}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">HN:</span> <span class="font-medium">${p.hn || '-'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">อายุ/เพศ:</span> <span>${p.age || '-'} ปี / ${p.gender || '-'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">ประเภท:</span> <span>${p.patientType || '-'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">ระดับ ADL:</span> <span>${p.adlScore || '-'}</span></div>
                                 <div class="flex justify-between"><span class="text-gray-500">สิทธิ์รักษา:</span> <span>${p.insurance || '-'}</span></div>
                                 <div class="flex justify-between"><span class="text-gray-500">วันที่รับดูแล:</span> <span>${formatDate(p.admissionDate)}</span></div>
                             </div>
@@ -1024,7 +1012,7 @@
                                     <div><label class="block text-xs mb-1">ท้องผูก (Constipation)</label><input type="number" min="0" max="10" id="dr_cons" class="w-full border rounded p-1 text-sm" value="0"></div>
                                 </div>
                                 <div><label class="block text-sm mb-1">บันทึกเพิ่มเติมจากทีม (Notes)</label><textarea id="dr_note" class="w-full border rounded p-2 text-sm h-16"></textarea></div>
-                                <div class="flex justify-end pt-3"><button type="submit" class="bg-sky-600 text-white px-4 py-2 rounded">บันทึก</button></div>
+                                <div class="flex justify-end pt-3"><button type="submit" class="bg-sky-600 text-white px-4 py-2 rounded">บันทึกลง Cloud</button></div>
                             </form>
                         </div>
                     </div>
@@ -1108,17 +1096,17 @@
             `;
         }
 
-        // --- DAILY RECORD MODAL LOGIC ---
+        // --- DAILY RECORD MODAL LOGIC (SAVE TO SUPABASE) ---
         window.openDailyRecordForm = function(patientId) {
             document.getElementById('dailyRecordModal').classList.remove('hidden');
         };
         window.closeDailyRecordForm = function() {
             document.getElementById('dailyRecordModal').classList.add('hidden');
         };
-        window.handleSaveDailyRecord = function(e, patientId) {
+        window.handleSaveDailyRecord = async function(e, patientId) {
             e.preventDefault();
             const newRecord = {
-                id: Date.now(),
+                // ไม่ต้องส่ง id ไป เพราะเราตั้งใน Supabase ให้มันสร้าง auto-increment ได้
                 patientId: patientId,
                 date: document.getElementById('dr_date').value,
                 bp: document.getElementById('dr_bp').value || '-',
@@ -1132,10 +1120,18 @@
                 constipation: parseInt(document.getElementById('dr_cons').value) || 0,
                 note: document.getElementById('dr_note').value
             };
-            state.dailyRecords.push(newRecord);
-            closeDailyRecordForm();
-            // re-render detail page
-            render();
+
+            try {
+                // บันทึกลง Supabase ในตาราง daily_records
+                const { error } = await supabaseClient.from('daily_records').insert(newRecord);
+                if (error) throw error;
+
+                closeDailyRecordForm();
+                await fetchInitialData(); // รีเฟรชข้อมูลเพื่ออัปเดตกราฟ
+            } catch (error) {
+                console.error('Error saving daily record:', error);
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูลอาการ: ' + error.message);
+            }
         };
 
         // --- EXPORT TO EXCEL LOGIC (SheetJS) ---
@@ -1218,6 +1214,8 @@
         // --- INIT ---
         window.onload = () => {
             navigate('dashboard');
+            // ทำการดึงข้อมูลจาก Supabase ทันทีที่เปิดเว็บ
+            fetchInitialData();
         };
     </script>
 </body>
