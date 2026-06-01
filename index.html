@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการสถานชีวาภิบาล วัดทับคล้อ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS (Excel Export) -->
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Prompt', sans-serif; background-color: #f3f4f6; }
+        .tab-active { border-bottom: 2px solid #0ea5e9; color: #0ea5e9; font-weight: 600; }
+        .tab-inactive { color: #6b7280; }
+        .tab-inactive:hover { color: #374151; }
+        
+        /* Hide scrollbar for clean UI but keep functionality */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-md flex-shrink-0 flex flex-col z-10 transition-all duration-300">
+        <div class="p-6 border-b border-gray-100 flex items-center gap-3">
+            <i class="ph ph-heartbeat text-3xl text-rose-500"></i>
+            <div>
+                <h1 class="font-bold text-lg leading-tight text-gray-800">สถานชีวาภิบาล</h1>
+                <p class="text-xs text-gray-500">วัดทับคล้อ</p>
+            </div>
+        </div>
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <button onclick="navigate('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-gray-600 hover:bg-sky-50 hover:text-sky-600">
+                <i class="ph ph-squares-four text-xl"></i>
+                <span>แดชบอร์ด</span>
+            </button>
+            <button onclick="navigate('patients')" id="nav-patients" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-gray-600 hover:bg-sky-50 hover:text-sky-600">
+                <i class="ph ph-users text-xl"></i>
+                <span>รายชื่อผู้ป่วย</span>
+            </button>
+            <button onclick="navigate('add-patient')" id="nav-add-patient" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-gray-600 hover:bg-sky-50 hover:text-sky-600">
+                <i class="ph ph-user-plus text-xl"></i>
+                <span>เพิ่มผู้ป่วยใหม่</span>
+            </button>
+        </nav>
+        <div class="p-4 border-t border-gray-100 text-xs text-gray-400 text-center">
+            Palliative Care System v1.1<br>(In-Memory State)
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
+        <!-- Header for Mobile / General Info -->
+        <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center z-0">
+            <h2 id="page-title" class="text-xl font-semibold text-gray-700">แดชบอร์ด</h2>
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-500"><i class="ph ph-clock mr-1"></i> <span id="current-date"></span></span>
+                <div class="h-8 w-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center font-bold">
+                    จน
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <div id="app-content" class="flex-1 overflow-y-auto p-4 md:p-8">
+            <!-- Content gets injected here by JS -->
+        </div>
+    </main>
+
+    <script>
+        // --- DATA & STATE MANAGEMENT ---
+        const MOCK_PATIENTS = [
+            {
+                id: 'P001', hn: '660001', name: 'นายบุญมี รักดี', age: 78, gender: 'ชาย', 
+                patientType: 'Palliative Care', admissionDate: '2023-10-12', 
+                diagnosis: 'CA Lung with Bone Mets', underlyingDiseases: 'HT, DLP', 
+                adlScore: 'พึ่งพิงสมบูรณ์ (0-4)', insurance: 'บัตรทอง',
+                relativeName: 'นางสมหญิง รักดี', relativePhone: '081-234-5678', relativeRelation: 'ภรรยา',
+                acp: 'ต้องการการดูแลแบบประคับประคองที่สถานชีวาภิบาล ไม่ต้องการกลับบ้าน',
+                polst: 'DNR (Do Not Resuscitate), No Intubation',
+                medReconcile: 'หยุดยาลดไขมันแล้ว',
+                medicationsList: [
+                    { name: 'Morphine', dosage: '10mg', frequency: 'ทุก 4 ชม.' },
+                    { name: 'Senna', dosage: '2 tab', frequency: 'ก่อนนอน (hs)' }
+                ],
+                bloodTestsList: [
+                    { year: 2565, fbs: 110, hba1c: 6.4, egfr: 75.2, chol: 210, hdl: 45, ldl: 130, tg: 160 },
+                    { year: 2566, fbs: 105, hba1c: 6.1, egfr: 78.5, chol: 198, hdl: 48, ldl: 120, tg: 145 },
+                    { year: 2567, fbs: 98, hba1c: 5.8, egfr: 82.1, chol: 190, hdl: 52, ldl: 110, tg: 130 }
+                ],
+                notes: 'มีอาการปวดกระดูกสันหลังรบกวนเวลานอน'
+            },
+            {
+                id: 'P002', hn: '660045', name: 'นางสมศรี ใจเย็น', age: 85, gender: 'หญิง', 
+                patientType: 'Elderly Care', admissionDate: '2023-11-05', 
+                diagnosis: 'Vascular Dementia', underlyingDiseases: 'DM, HT, Stroke', 
+                adlScore: 'พึ่งพิงบางส่วน (5-11)', insurance: 'ข้าราชการ',
+                relativeName: 'นายสมชาย ใจเย็น', relativePhone: '089-876-5432', relativeRelation: 'บุตรชาย',
+                acp: 'ปฏิเสธการใส่สายยางให้อาหาร หากกลืนไม่ได้ให้ IV fluid',
+                polst: 'Full Code',
+                medReconcile: 'ปรับยาเบาหวานตาม FBS',
+                medicationsList: [
+                    { name: 'Amlodipine', dosage: '5mg', frequency: 'วันละครั้ง เช้า' },
+                    { name: 'Metformin', dosage: '500mg', frequency: 'วันละครั้ง หลังอาหารเช้า' }
+                ],
+                bloodTestsList: [
+                    { year: 2566, fbs: 125, hba1c: 7.2, egfr: 64.0, chol: 185, hdl: 40, ldl: 112, tg: 175 },
+                    { year: 2567, fbs: 118, hba1c: 6.9, egfr: 68.3, chol: 178, hdl: 43, ldl: 105, tg: 162 }
+                ],
+                notes: 'สับสนช่วงเย็น (Sundowning)'
+            }
+        ];
+
+        const MOCK_RECORDS = [
+            { id: 1, patientId: 'P001', date: '2023-11-20', bp: '110/70', hr: '88', rr: '22', temp: '37.1', o2: '95', pain: 6, dyspnea: 4, depression: 2, constipation: 0, note: 'ปวดหลังมากขึ้น ขอยาแก้ปวดเพิ่ม' },
+            { id: 2, patientId: 'P001', date: '2023-11-21', bp: '105/65', hr: '85', rr: '20', temp: '36.8', o2: '96', pain: 3, dyspnea: 2, depression: 2, constipation: 5, note: 'ปวดลดลงหลังปรับยา แต่เริ่มมีอาการท้องผูก' },
+            { id: 3, patientId: 'P002', date: '2023-11-21', bp: '130/80', hr: '76', rr: '18', temp: '36.5', o2: '98', pain: 0, dyspnea: 0, depression: 0, constipation: 0, note: 'ทานอาหารได้น้อยลง มีอาการสำลักน้ำ' }
+        ];
+
+        const state = {
+            currentView: 'dashboard',
+            patients: [...MOCK_PATIENTS],
+            dailyRecords: [...MOCK_RECORDS],
+            selectedPatientId: null,
+            detailTab: 'info' // info, medical, records
+        };
+
+        // Temporary arrays used in Patient Form to hold medications & blood tests dynamically
+        window.tempMedications = [];
+        window.tempBloodTests = [];
+
+        // --- UTILITIES ---
+        const formatDate = (dateStr) => {
+            if(!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+        };
+
+        const parseBP = (bpStr) => {
+            if(!bpStr || !bpStr.includes('/')) return { sys: null, dia: null };
+            const parts = bpStr.split('/');
+            return {
+                sys: parseInt(parts[0]) || null,
+                dia: parseInt(parts[1]) || null
+            };
+        };
+
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        // --- ROUTING & RENDER LOOP ---
+        function navigate(view, params = {}) {
+            state.currentView = view;
+            if(params.patientId) state.selectedPatientId = params.patientId;
+            if(params.tab) state.detailTab = params.tab;
+            
+            // Setup / Reset temporary variables for adding/editing patient form
+            if (view === 'add-patient') {
+                const p = state.selectedPatientId ? state.patients.find(x => x.id === state.selectedPatientId) : {};
+                window.tempMedications = p.medicationsList ? JSON.parse(JSON.stringify(p.medicationsList)) : [];
+                window.tempBloodTests = p.bloodTestsList ? JSON.parse(JSON.stringify(p.bloodTestsList)) : [];
+            }
+            
+            // Update Active Nav
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('bg-sky-100', 'text-sky-700', 'font-medium');
+                btn.classList.add('text-gray-600');
+            });
+            
+            const activeBtn = document.getElementById(`nav-${view === 'patient-detail' ? 'patients' : view}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-gray-600');
+                activeBtn.classList.add('bg-sky-100', 'text-sky-700', 'font-medium');
+            }
+
+            // Update Title
+            const titles = {
+                'dashboard': 'แดชบอร์ดสรุปข้อมูล',
+                'patients': 'ระบบจัดการรายชื่อผู้ป่วย',
+                'add-patient': 'เพิ่ม/แก้ไข ข้อมูลผู้ป่วย',
+                'patient-detail': 'รายละเอียดผู้ป่วย'
+            };
+            document.getElementById('page-title').innerText = titles[view] || 'ระบบจัดการสถานชีวาภิบาล';
+
+            render();
+        }
+
+        function render() {
+            const content = document.getElementById('app-content');
+            content.innerHTML = ''; // clear
+
+            switch(state.currentView) {
+                case 'dashboard': renderDashboard(content); break;
+                case 'patients': renderPatients(content); break;
+                case 'add-patient': renderPatientForm(content); break;
+                case 'patient-detail': renderPatientDetail(content); break;
+            }
+        }
+
+        // --- VIEWS ---
+
+        // 1. DASHBOARD
+        function renderDashboard(container) {
+            const totalPatients = state.patients.length;
+            const palliativeCount = state.patients.filter(p => p.patientType.includes('Palliative')).length;
+            
+            let adlCounts = { 'พึ่งพิงสมบูรณ์': 0, 'พึ่งพิงบางส่วน': 0, 'ช่วยเหลือตัวเองได้': 0 };
+            state.patients.forEach(p => {
+                if(p.adlScore.includes('สมบูรณ์')) adlCounts['พึ่งพิงสมบูรณ์']++;
+                else if(p.adlScore.includes('บางส่วน')) adlCounts['พึ่งพิงบางส่วน']++;
+                else adlCounts['ช่วยเหลือตัวเองได้']++;
+            });
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">ผู้ป่วยทั้งหมด</p>
+                            <h3 class="text-3xl font-bold text-gray-800">${totalPatients} <span class="text-base font-normal">คน</span></h3>
+                        </div>
+                        <div class="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-2xl">
+                            <i class="ph ph-users"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">ผู้ป่วย Palliative Care</p>
+                            <h3 class="text-3xl font-bold text-rose-600">${palliativeCount} <span class="text-base font-normal">คน</span></h3>
+                        </div>
+                        <div class="h-12 w-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 text-2xl">
+                            <i class="ph ph-heartbeat"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">ผู้ป่วยที่ต้องพึ่งพิงสมบูรณ์</p>
+                            <h3 class="text-3xl font-bold text-orange-500">${adlCounts['พึ่งพิงสมบูรณ์']} <span class="text-base font-normal">คน</span></h3>
+                        </div>
+                        <div class="h-12 w-12 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 text-2xl">
+                            <i class="ph ph-wheelchair"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <h4 class="font-semibold text-gray-700 mb-4">สัดส่วนผู้ป่วยตามระดับ ADL</h4>
+                        <div class="h-64 flex justify-center"><canvas id="adlChart"></canvas></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <h4 class="font-semibold text-gray-700 mb-4">แนวโน้มอาการเฉลี่ย (7 วันล่าสุด)</h4>
+                        <div class="h-64"><canvas id="symptomChart"></canvas></div>
+                    </div>
+                </div>
+            `;
+
+            // Draw Charts after DOM update
+            setTimeout(() => {
+                // ADL Chart
+                new Chart(document.getElementById('adlChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['พึ่งพิงสมบูรณ์', 'พึ่งพิงบางส่วน', 'ช่วยเหลือตัวเองได้'],
+                        datasets: [{
+                            data: [adlCounts['พึ่งพิงสมบูรณ์'], adlCounts['พึ่งพิงบางส่วน'], adlCounts['ช่วยเหลือตัวเองได้']],
+                            backgroundColor: ['#f97316', '#eab308', '#22c55e']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+
+                // Mock Average Symptoms
+                new Chart(document.getElementById('symptomChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['ปวด (Pain)', 'เหนื่อย (Dyspnea)', 'ซึมเศร้า (Depression)', 'ท้องผูก (Constipation)'],
+                        datasets: [{
+                            label: 'คะแนนความรุนแรงเฉลี่ย (0-10)',
+                            data: [3.5, 2.0, 1.5, 4.2], // Mock avg data
+                            backgroundColor: ['#ef4444', '#3b82f6', '#64748b', '#a855f7']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 10 } } }
+                });
+            }, 100);
+        }
+
+        // 2. PATIENT LIST
+        function renderPatients(container) {
+            let trs = state.patients.map(p => {
+                let dnrBadge = p.polst && p.polst.includes('DNR') 
+                    ? `<span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-md font-medium">DNR</span>` 
+                    : `<span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-md font-medium">Full Code</span>`;
+                
+                return `
+                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                        <td class="py-4 px-4 text-sm text-gray-600">${p.hn}</td>
+                        <td class="py-4 px-4 font-medium text-gray-800">${p.name}</td>
+                        <td class="py-4 px-4 text-sm text-gray-600">${p.age} / ${p.gender}</td>
+                        <td class="py-4 px-4 text-sm text-gray-600">${p.diagnosis || '-'}</td>
+                        <td class="py-4 px-4 text-sm text-gray-600">${p.adlScore}</td>
+                        <td class="py-4 px-4">${dnrBadge}</td>
+                        <td class="py-4 px-4 flex gap-2">
+                            <button onclick="navigate('patient-detail', {patientId: '${p.id}'})" class="px-3 py-1.5 bg-sky-100 text-sky-700 rounded-lg text-sm hover:bg-sky-200 transition">รายละเอียด</button>
+                            <button onclick="navigate('add-patient', {patientId: '${p.id}'})" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition"><i class="ph ph-pencil-simple"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+                    <div class="p-4 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4">
+                        <div class="relative max-w-sm w-full">
+                            <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="patient-search-input" oninput="handleSearch(this.value)" placeholder="ค้นหา HN, ชื่อ, โรค..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition">
+                        </div>
+                        <button onclick="exportAllToExcel()" class="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg font-medium hover:bg-green-100 transition border border-green-200">
+                            <i class="ph ph-file-xls text-lg"></i> ส่งออก Excel ทั้งหมด
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-sm border-b border-gray-100">
+                                    <th class="py-3 px-4 font-medium">HN</th>
+                                    <th class="py-3 px-4 font-medium">ชื่อ-สกุล</th>
+                                    <th class="py-3 px-4 font-medium">อายุ/เพศ</th>
+                                    <th class="py-3 px-4 font-medium">การวินิจฉัย (Dx)</th>
+                                    <th class="py-3 px-4 font-medium">ระดับ ADL</th>
+                                    <th class="py-3 px-4 font-medium">สถานะกู้ชีพ</th>
+                                    <th class="py-3 px-4 font-medium">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="patient-table-body">${trs}</tbody>
+                        </table>
+                        <div id="no-patients-alert" class="hidden text-center py-8 text-gray-500">ไม่มีข้อมูลผู้ป่วย</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.handleSearch = function(query) {
+            const filtered = state.patients.filter(p => 
+                p.hn.toLowerCase().includes(query.toLowerCase()) ||
+                p.name.toLowerCase().includes(query.toLowerCase()) ||
+                (p.diagnosis && p.diagnosis.toLowerCase().includes(query.toLowerCase())) ||
+                (p.underlyingDiseases && p.underlyingDiseases.toLowerCase().includes(query.toLowerCase()))
+            );
+
+            const tbody = document.getElementById('patient-table-body');
+            const alertDiv = document.getElementById('no-patients-alert');
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = '';
+                alertDiv.classList.remove('hidden');
+            } else {
+                alertDiv.classList.add('hidden');
+                tbody.innerHTML = filtered.map(p => {
+                    let dnrBadge = p.polst && p.polst.includes('DNR') 
+                        ? `<span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-md font-medium">DNR</span>` 
+                        : `<span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-md font-medium">Full Code</span>`;
+                    
+                    return `
+                        <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                            <td class="py-4 px-4 text-sm text-gray-600">${p.hn}</td>
+                            <td class="py-4 px-4 font-medium text-gray-800">${p.name}</td>
+                            <td class="py-4 px-4 text-sm text-gray-600">${p.age} / ${p.gender}</td>
+                            <td class="py-4 px-4 text-sm text-gray-600">${p.diagnosis || '-'}</td>
+                            <td class="py-4 px-4 text-sm text-gray-600">${p.adlScore}</td>
+                            <td class="py-4 px-4">${dnrBadge}</td>
+                            <td class="py-4 px-4 flex gap-2">
+                                <button onclick="navigate('patient-detail', {patientId: '${p.id}'})" class="px-3 py-1.5 bg-sky-100 text-sky-700 rounded-lg text-sm hover:bg-sky-200 transition">รายละเอียด</button>
+                                <button onclick="navigate('add-patient', {patientId: '${p.id}'})" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition"><i class="ph ph-pencil-simple"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        };
+
+        // 3. ADD/EDIT PATIENT FORM
+        function renderPatientForm(container) {
+            const p = state.selectedPatientId ? state.patients.find(x => x.id === state.selectedPatientId) : {};
+            const isEdit = !!state.selectedPatientId;
+
+            container.innerHTML = `
+                <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-gray-800">${isEdit ? 'แก้ไขข้อมูลผู้ป่วย: '+p.name : 'ลงทะเบียนผู้ป่วยใหม่'}</h3>
+                        ${isEdit ? `<button onclick="navigate('patient-detail', {patientId: '${p.id}'})" class="text-sky-600 text-sm hover:underline">ยกเลิก/กลับไปหน้ารายละเอียด</button>` : ''}
+                    </div>
+
+                    <form id="patientForm" onsubmit="handleSavePatient(event)" class="space-y-8">
+                        <input type="hidden" id="f_id" value="${p.id || ''}">
+                        
+                        <!-- Section 1: ข้อมูลทั่วไป -->
+                        <section>
+                            <h4 class="font-medium text-gray-700 border-b pb-2 mb-4">1. ข้อมูลทั่วไป (General Info)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">HN</label>
+                                    <input type="text" id="f_hn" value="${p.hn || ''}" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500 focus:border-sky-500" required>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm text-gray-600 mb-1">ชื่อ-สกุล</label>
+                                    <input type="text" id="f_name" value="${p.name || ''}" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">อายุ (ปี)</label>
+                                    <input type="number" id="f_age" value="${p.age || ''}" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">เพศ</label>
+                                    <select id="f_gender" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500">
+                                        <option value="ชาย" ${p.gender==='ชาย'?'selected':''}>ชาย</option>
+                                        <option value="หญิง" ${p.gender==='หญิง'?'selected':''}>หญิง</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">สิทธิ์การรักษา</label>
+                                    <input type="text" id="f_insurance" value="${p.insurance || ''}" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">วันที่เข้ารับการดูแล</label>
+                                    <input type="date" id="f_admission" value="${p.admissionDate || ''}" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">ประเภทผู้ป่วย</label>
+                                    <select id="f_type" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500">
+                                        <option value="Palliative Care" ${p.patientType==='Palliative Care'?'selected':''}>Palliative Care</option>
+                                        <option value="Elderly Care" ${p.patientType==='Elderly Care'?'selected':''}>Elderly Care (ดูแลผู้สูงอายุ)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">ระดับการพึ่งพิง (ADL)</label>
+                                    <select id="f_adl" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500">
+                                        <option value="พึ่งพิงสมบูรณ์ (0-4)" ${p.adlScore==='พึ่งพิงสมบูรณ์ (0-4)'?'selected':''}>พึ่งพิงสมบูรณ์ (0-4)</option>
+                                        <option value="พึ่งพิงบางส่วน (5-11)" ${p.adlScore==='พึ่งพิงบางส่วน (5-11)'?'selected':''}>พึ่งพิงบางส่วน (5-11)</option>
+                                        <option value="ช่วยเหลือตัวเองได้ (12+)" ${p.adlScore==='ช่วยเหลือตัวเองได้ (12+)'?'selected':''}>ช่วยเหลือตัวเองได้ (12+)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Section 2: ข้อมูลการแพทย์ -->
+                        <section class="space-y-6">
+                            <h4 class="font-medium text-gray-700 border-b pb-2">2. ข้อมูลการแพทย์ (Medical Info)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">การวินิจฉัยโรคหลัก (Diagnosis)</label>
+                                    <textarea id="f_dx" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500 h-20">${p.diagnosis || ''}</textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">โรคประจำตัว (Underlying Diseases)</label>
+                                    <textarea id="f_underlying" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500 h-20">${p.underlyingDiseases || ''}</textarea>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm text-gray-600 mb-1">แผนกปรับเปลี่ยนยา / Med Reconcile</label>
+                                    <input type="text" id="f_medReconcile" value="${p.medReconcile || ''}" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500" placeholder="เช่น หยุดยาลดไขมัน ปรับขนาดยาพารา...">
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Medications Section -->
+                            <div class="border border-gray-200 rounded-xl p-4 bg-gray-50 space-y-4">
+                                <h5 class="font-semibold text-gray-700 text-sm flex items-center gap-2">
+                                    <i class="ph ph-pill text-sky-600 text-lg"></i>
+                                    <span>ยาประจำตัว (Medications) - บันทึกทีละรายการ</span>
+                                </h5>
+                                <div id="temp-meds-list" class="space-y-2">
+                                    <!-- Dynamic Rows -->
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end pt-2 border-t border-gray-200">
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">ชื่อยา</label>
+                                        <input type="text" id="add_med_name" class="w-full px-3 py-1.5 text-sm border bg-white rounded-lg focus:ring-sky-500" placeholder="เช่น Morphine">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">ขนาด (Dose)</label>
+                                        <input type="text" id="add_med_dose" class="w-full px-3 py-1.5 text-sm border bg-white rounded-lg focus:ring-sky-500" placeholder="เช่น 10mg">
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <div class="flex-1">
+                                            <label class="block text-xs text-gray-500 mb-1">วิธีใช้ (Frequency)</label>
+                                            <input type="text" id="add_med_freq" class="w-full px-3 py-1.5 text-sm border bg-white rounded-lg focus:ring-sky-500" placeholder="เช่น ทุก 4 ชม.">
+                                        </div>
+                                        <button type="button" onclick="handleAddMedication()" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-medium self-end">เพิ่มยา</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Annual Blood Test Section -->
+                            <div class="border border-gray-200 rounded-xl p-4 bg-gray-50 space-y-4">
+                                <h5 class="font-semibold text-gray-700 text-sm flex items-center gap-2">
+                                    <i class="ph ph-drop text-rose-600 text-lg"></i>
+                                    <span>ผลตรวจเลือดประจำปี (Annual Blood Tests)</span>
+                                </h5>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-xs text-left">
+                                        <thead>
+                                            <tr class="bg-gray-100 text-gray-600">
+                                                <th class="p-2">ปี พ.ศ.</th>
+                                                <th class="p-2">FBS (mg/dL)</th>
+                                                <th class="p-2">HbA1C (%)</th>
+                                                <th class="p-2">eGFR (mL/min)</th>
+                                                <th class="p-2">Cholesterol</th>
+                                                <th class="p-2">HDL</th>
+                                                <th class="p-2">LDL</th>
+                                                <th class="p-2">Triglyceride</th>
+                                                <th class="p-2">จัดการ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="temp-blood-list">
+                                            <!-- Dynamic Rows -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2 items-end pt-2 border-t border-gray-200">
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500">ปี พ.ศ.</label>
+                                        <input type="number" id="add_blood_year" class="w-full px-2 py-1 text-xs border bg-white rounded" placeholder="2569" value="2569">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500">FBS</label>
+                                        <input type="number" id="add_blood_fbs" class="w-full px-2 py-1 text-xs border bg-white rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500">HbA1C (%)</label>
+                                        <input type="number" step="0.1" id="add_blood_hba1c" class="w-full px-2 py-1 text-xs border bg-white rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500">eGFR</label>
+                                        <input type="number" step="0.1" id="add_blood_egfr" class="w-full px-2 py-1 text-xs border bg-white rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500">Cholesterol</label>
+                                        <input type="number" id="add_blood_chol" class="w-full px-2 py-1 text-xs border bg-white rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500">HDL</label>
+                                        <input type="number" id="add_blood_hdl" class="w-full px-2 py-1 text-xs border bg-white rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500">LDL</label>
+                                        <input type="number" id="add_blood_ldl" class="w-full px-2 py-1 text-xs border bg-white rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500">Triglyceride</label>
+                                        <input type="number" id="add_blood_tg" class="w-full px-2 py-1 text-xs border bg-white rounded">
+                                    </div>
+                                    <div>
+                                        <button type="button" onclick="handleAddBloodTest()" class="w-full py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-xs font-semibold">เพิ่ม</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Section 3: ACP & POLST -->
+                        <section>
+                            <h4 class="font-medium text-gray-700 border-b pb-2 mb-4">3. แผนการดูแลล่วงหน้า (ACP & POLST)</h4>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">ระดับความประสงค์กู้ชีพ (POLST/DNR Status)</label>
+                                    <select id="f_polst" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500 font-medium ${p.polst && p.polst.includes('DNR') ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50'}">
+                                        <option value="DNR (Do Not Resuscitate)" ${p.polst?.includes('DNR')?'selected':''}>DNR (ปฏิเสธการปั๊มหัวใจ/ใส่ท่อ)</option>
+                                        <option value="Full Code" ${p.polst?.includes('Full Code')?'selected':''}>Full Code (กู้ชีพเต็มที่)</option>
+                                        <option value="Limited Intervention" ${p.polst?.includes('Limited')?'selected':''}>Limited Intervention (จำกัดการรักษาบางประการ)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">แผนการดูแลล่วงหน้า (Advance Care Plan)</label>
+                                    <textarea id="f_acp" class="w-full px-3 py-2 border rounded-lg focus:ring-sky-500 h-20" placeholder="เช่น ความประสงค์วาระสุดท้าย สถานที่เสียชีวิตที่ต้องการ...">${p.acp || ''}</textarea>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div class="flex justify-end gap-3 pt-6 border-t border-gray-100">
+                            <button type="button" onclick="navigate('patients')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition">ยกเลิก</button>
+                            <button type="submit" class="px-6 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition shadow-sm font-medium">บันทึกข้อมูล</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            // Render medications & blood test items immediately
+            window.renderTempMedications();
+            window.renderTempBloodTests();
+        }
+
+        // --- HANDLERS FOR DYNAMIC MEDICATIONS ---
+        window.renderTempMedications = function() {
+            const container = document.getElementById('temp-meds-list');
+            if(!container) return;
+            container.innerHTML = window.tempMedications.map((m, idx) => `
+                <div class="flex justify-between items-center bg-sky-50 text-sky-900 px-3 py-2 rounded-lg text-sm border border-sky-100">
+                    <div>
+                        <span class="font-semibold text-sky-800">${m.name}</span>
+                        <span class="text-xs text-sky-600 ml-3">ขนาด: ${m.dosage} | วิธีใช้: ${m.frequency}</span>
+                    </div>
+                    <button type="button" onclick="window.removeTempMedication(${idx})" class="text-rose-500 hover:text-rose-700 font-medium text-xs">ลบ</button>
+                </div>
+            `).join('') || '<p class="text-gray-400 text-xs py-2 text-center">ยังไม่มีข้อมูลยาประจำตัว</p>';
+        };
+
+        window.handleAddMedication = function() {
+            const name = document.getElementById('add_med_name').value.trim();
+            const dosage = document.getElementById('add_med_dose').value.trim();
+            const frequency = document.getElementById('add_med_freq').value.trim();
+
+            if(!name) { alert('กรุณากรอกชื่อยา'); return; }
+
+            window.tempMedications.push({ name, dosage, frequency });
+            document.getElementById('add_med_name').value = '';
+            document.getElementById('add_med_dose').value = '';
+            document.getElementById('add_med_freq').value = '';
+
+            window.renderTempMedications();
+        };
+
+        window.removeTempMedication = function(idx) {
+            window.tempMedications.splice(idx, 1);
+            window.renderTempMedications();
+        };
+
+        // --- HANDLERS FOR DYNAMIC BLOOD TESTS ---
+        window.renderTempBloodTests = function() {
+            const container = document.getElementById('temp-blood-list');
+            if(!container) return;
+            container.innerHTML = window.tempBloodTests.map((b, idx) => `
+                <tr class="border-b border-gray-200">
+                    <td class="p-2 font-medium">${b.year}</td>
+                    <td class="p-2">${b.fbs || '-'}</td>
+                    <td class="p-2">${b.hba1c ? b.hba1c + '%' : '-'}</td>
+                    <td class="p-2">${b.egfr || '-'}</td>
+                    <td class="p-2">${b.chol || '-'}</td>
+                    <td class="p-2">${b.hdl || '-'}</td>
+                    <td class="p-2">${b.ldl || '-'}</td>
+                    <td class="p-2">${b.tg || '-'}</td>
+                    <td class="p-2">
+                        <button type="button" onclick="window.removeTempBloodTest(${idx})" class="text-rose-500 hover:text-rose-700 font-medium">ลบ</button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="9" class="text-center py-4 text-gray-400">ยังไม่มีประวัติบันทึกตรวจเลือด</td></tr>';
+        };
+
+        window.handleAddBloodTest = function() {
+            const yearInput = document.getElementById('add_blood_year');
+            const fbsInput = document.getElementById('add_blood_fbs');
+            const hba1cInput = document.getElementById('add_blood_hba1c');
+            const egfrInput = document.getElementById('add_blood_egfr');
+            const cholInput = document.getElementById('add_blood_chol');
+            const hdlInput = document.getElementById('add_blood_hdl');
+            const ldlInput = document.getElementById('add_blood_ldl');
+            const tgInput = document.getElementById('add_blood_tg');
+
+            const year = parseInt(yearInput.value) || new Date().getFullYear() + 543;
+            const fbs = parseInt(fbsInput.value) || null;
+            const hba1c = parseFloat(hba1cInput.value) || null;
+            const egfr = parseFloat(egfrInput.value) || null;
+            const chol = parseInt(cholInput.value) || null;
+            const hdl = parseInt(hdlInput.value) || null;
+            const ldl = parseInt(ldlInput.value) || null;
+            const tg = parseInt(tgInput.value) || null;
+
+            window.tempBloodTests.push({ year, fbs, hba1c, egfr, chol, hdl, ldl, tg });
+            
+            // Clear inputs
+            fbsInput.value = '';
+            hba1cInput.value = '';
+            egfrInput.value = '';
+            cholInput.value = '';
+            hdlInput.value = '';
+            ldlInput.value = '';
+            tgInput.value = '';
+
+            window.renderTempBloodTests();
+        };
+
+        window.removeTempBloodTest = function(idx) {
+            window.tempBloodTests.splice(idx, 1);
+            window.renderTempBloodTests();
+        };
+
+        // --- SAVE MAIN FORM ---
+        window.handleSavePatient = function(e) {
+            e.preventDefault();
+            const id = document.getElementById('f_id').value;
+            const newData = {
+                hn: document.getElementById('f_hn').value,
+                name: document.getElementById('f_name').value,
+                age: document.getElementById('f_age').value,
+                gender: document.getElementById('f_gender').value,
+                insurance: document.getElementById('f_insurance').value,
+                admissionDate: document.getElementById('f_admission').value,
+                patientType: document.getElementById('f_type').value,
+                adlScore: document.getElementById('f_adl').value,
+                diagnosis: document.getElementById('f_dx').value,
+                underlyingDiseases: document.getElementById('f_underlying').value,
+                medReconcile: document.getElementById('f_medReconcile').value,
+                polst: document.getElementById('f_polst').value,
+                acp: document.getElementById('f_acp').value,
+                medicationsList: [...window.tempMedications],
+                bloodTestsList: [...window.tempBloodTests]
+            };
+
+            if(id) {
+                // Update
+                const idx = state.patients.findIndex(p => p.id === id);
+                state.patients[idx] = { ...state.patients[idx], ...newData };
+            } else {
+                // Insert
+                newData.id = 'P' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+                state.patients.push(newData);
+            }
+            alert('บันทึกข้อมูลผู้ป่วยสำเร็จ!');
+            navigate('patients');
+        };
+
+        // 4. PATIENT DETAIL
+        function renderPatientDetail(container) {
+            const p = state.patients.find(x => x.id === state.selectedPatientId);
+            if(!p) { navigate('patients'); return; }
+
+            const isDNR = p.polst && p.polst.includes('DNR');
+            const dnrBanner = isDNR 
+                ? `<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 flex items-center gap-3">
+                    <i class="ph-fill ph-warning-circle text-2xl"></i>
+                    <div><span class="font-bold">สถานะ: DNR (Do Not Resuscitate)</span> - โปรดปฏิบัติตามแผนการดูแลล่วงหน้า (ACP) อย่างเคร่งครัด</div>
+                   </div>` 
+                : `<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-6 flex items-center gap-3">
+                    <i class="ph-fill ph-check-circle text-2xl"></i>
+                    <div><span class="font-bold">สถานะ: Full Code</span></div>
+                   </div>`;
+
+            // Tabs Logic
+            const tabs = [
+                { id: 'info', label: 'ข้อมูลทั่วไป & ACP' },
+                { id: 'medical', label: 'การแพทย์ ผลเลือด & ยาประจำตัว' },
+                { id: 'records', label: 'บันทึกอาการ & สัญญาณชีพ' }
+            ];
+
+            let tabHeader = `<div class="flex border-b border-gray-200 mb-6 gap-6">`;
+            tabs.forEach(t => {
+                const activeClass = state.detailTab === t.id ? 'tab-active' : 'tab-inactive border-transparent';
+                tabHeader += `<button onclick="navigate('patient-detail', {patientId: '${p.id}', tab: '${t.id}'})" class="pb-3 px-1 transition-colors ${activeClass}">${t.label}</button>`;
+            });
+            tabHeader += `</div>`;
+
+            let tabContent = '';
+            if(state.detailTab === 'info') {
+                tabContent = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">ข้อมูลเบื้องต้น</h4>
+                            <div class="bg-gray-50 p-4 rounded-xl space-y-3 text-sm">
+                                <div class="flex justify-between"><span class="text-gray-500">HN:</span> <span class="font-medium">${p.hn}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">อายุ/เพศ:</span> <span>${p.age} ปี / ${p.gender}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">ประเภท:</span> <span>${p.patientType}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">ระดับ ADL:</span> <span>${p.adlScore}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">สิทธิ์รักษา:</span> <span>${p.insurance || '-'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">วันที่รับดูแล:</span> <span>${formatDate(p.admissionDate)}</span></div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">ญาติผู้ดูแลหลัก</h4>
+                            <div class="bg-gray-50 p-4 rounded-xl space-y-3 text-sm h-full">
+                                <div class="flex justify-between"><span class="text-gray-500">ชื่อ-สกุล:</span> <span class="font-medium">${p.relativeName || '-'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">ความเกี่ยวข้อง:</span> <span>${p.relativeRelation || '-'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">เบอร์ติดต่อ:</span> <span>${p.relativePhone || '-'}</span></div>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Advance Care Plan (ACP)</h4>
+                            <div class="bg-amber-50 border border-amber-100 p-4 rounded-xl text-amber-900 text-sm whitespace-pre-wrap">${p.acp || 'ไม่มีบันทึก'}</div>
+                        </div>
+                    </div>
+                `;
+            } else if(state.detailTab === 'medical') {
+                // Medical Medications & Annual Blood Tests + Graphs
+                tabContent = `
+                    <div class="space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-6">
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">การวินิจฉัย (Diagnosis)</h4>
+                                    <div class="bg-gray-50 p-4 rounded-xl text-sm whitespace-pre-wrap font-medium">${p.diagnosis || '-'}</div>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">โรคประจำตัว</h4>
+                                    <div class="bg-gray-50 p-4 rounded-xl text-sm whitespace-pre-wrap">${p.underlyingDiseases || '-'}</div>
+                                </div>
+                            </div>
+                            <div class="space-y-6">
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">ยาประจำตัว (Medications)</h4>
+                                    <div class="bg-gray-50 p-4 rounded-xl text-sm space-y-2 max-h-56 overflow-y-auto">
+                                        ${p.medicationsList && p.medicationsList.length > 0 ? p.medicationsList.map(m => `
+                                            <div class="flex justify-between items-center bg-white p-2.5 rounded-lg shadow-sm border border-gray-100">
+                                                <span class="font-semibold text-sky-800">${m.name}</span>
+                                                <span class="text-xs text-gray-500">${m.dosage} (${m.frequency})</span>
+                                            </div>
+                                        `).join('') : '<p class="text-gray-400 text-xs text-center py-4">ไม่มีประวัติบันทึกยา</p>'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">สรุปการปรับเปลี่ยนยา / Med Reconcile</h4>
+                                    <div class="bg-teal-50 border border-teal-100 p-4 rounded-xl text-sm text-teal-900">${p.medReconcile || '-'}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Annual Blood Tests Tables -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">ตารางบันทึกผลเลือดประจำปี</h4>
+                            <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-gray-50 text-gray-600 border-b">
+                                        <tr>
+                                            <th class="p-3">ปี พ.ศ.</th>
+                                            <th class="p-3">FBS (mg/dL)</th>
+                                            <th class="p-3">HbA1C (%)</th>
+                                            <th class="p-3">eGFR (mL/min)</th>
+                                            <th class="p-3">Cholesterol</th>
+                                            <th class="p-3">HDL</th>
+                                            <th class="p-3">LDL</th>
+                                            <th class="p-3">Triglyceride</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${p.bloodTestsList && p.bloodTestsList.length > 0 ? p.bloodTestsList.map(b => `
+                                            <tr class="border-b hover:bg-gray-50">
+                                                <td class="p-3 font-semibold text-gray-800">${b.year}</td>
+                                                <td class="p-3">${b.fbs || '-'}</td>
+                                                <td class="p-3 font-medium text-amber-600">${b.hba1c ? b.hba1c + '%' : '-'}</td>
+                                                <td class="p-3 font-medium text-emerald-600">${b.egfr || '-'}</td>
+                                                <td class="p-3">${b.chol || '-'}</td>
+                                                <td class="p-3 text-sky-600">${b.hdl || '-'}</td>
+                                                <td class="p-3 text-red-500">${b.ldl || '-'}</td>
+                                                <td class="p-3">${b.tg || '-'}</td>
+                                            </tr>
+                                        `).join('') : '<tr><td colspan="8" class="text-center py-8 text-gray-400">ยังไม่มีข้อมูลผลตรวจเลือดประจำปี</td></tr>'}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Blood Tests Charts Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                                <h5 class="font-semibold text-gray-700 text-xs mb-3">ค่าน้ำตาลในเลือด (FBS & HbA1C)</h5>
+                                <div class="h-48"><canvas id="sugarTrendChart"></canvas></div>
+                            </div>
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                                <h5 class="font-semibold text-gray-700 text-xs mb-3">การทำงานของไต (eGFR)</h5>
+                                <div class="h-48"><canvas id="kidneyTrendChart"></canvas></div>
+                            </div>
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                                <h5 class="font-semibold text-gray-700 text-xs mb-3">ระดับไขมันในเลือด (Lipid Profiles)</h5>
+                                <div class="h-48"><canvas id="lipidTrendChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Draw annual blood test charts
+                setTimeout(() => {
+                    const sortedBlood = [...(p.bloodTestsList || [])].sort((a,b) => a.year - b.year);
+                    const years = sortedBlood.map(b => 'พ.ศ. ' + b.year);
+
+                    if(sortedBlood.length > 0) {
+                        // Sugar Chart
+                        new Chart(document.getElementById('sugarTrendChart'), {
+                            type: 'line',
+                            data: {
+                                labels: years,
+                                datasets: [
+                                    { label: 'FBS', data: sortedBlood.map(b => b.fbs), borderColor: '#ea580c', tension: 0.2, yAxisID: 'y' },
+                                    { label: 'HbA1C', data: sortedBlood.map(b => b.hba1c), borderColor: '#db2777', tension: 0.2, yAxisID: 'y2' }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: { position: 'left', title: { display: true, text: 'FBS (mg/dL)' } },
+                                    y2: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'HbA1C (%)' } }
+                                }
+                            }
+                        });
+
+                        // Kidney Chart
+                        new Chart(document.getElementById('kidneyTrendChart'), {
+                            type: 'line',
+                            data: {
+                                labels: years,
+                                datasets: [{ label: 'eGFR', data: sortedBlood.map(b => b.egfr), borderColor: '#10b981', tension: 0.2, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.05)' }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: { y: { beginAtZero: false, title: { display: true, text: 'eGFR' } } }
+                            }
+                        });
+
+                        // Lipids Chart
+                        new Chart(document.getElementById('lipidTrendChart'), {
+                            type: 'line',
+                            data: {
+                                labels: years,
+                                datasets: [
+                                    { label: 'Cholesterol', data: sortedBlood.map(b => b.chol), borderColor: '#475569', tension: 0.2 },
+                                    { label: 'HDL', data: sortedBlood.map(b => b.hdl), borderColor: '#0ea5e9', tension: 0.2 },
+                                    { label: 'LDL', data: sortedBlood.map(b => b.ldl), borderColor: '#ef4444', tension: 0.2 },
+                                    { label: 'Triglyceride', data: sortedBlood.map(b => b.tg), borderColor: '#8b5cf6', tension: 0.2 }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: { y: { title: { display: true, text: 'mg/dL' } } }
+                            }
+                        });
+                    }
+                }, 100);
+
+            } else if (state.detailTab === 'records') {
+                const records = state.dailyRecords.filter(r => r.patientId === p.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+                let recordRows = records.map(r => `
+                    <tr class="border-b border-gray-100 text-sm">
+                        <td class="py-2">${formatDate(r.date)}</td>
+                        <td>${r.bp}</td><td>${r.hr}</td><td>${r.rr}</td><td>${r.temp}</td><td>${r.o2}%</td>
+                        <td class="text-red-500 font-medium">${r.pain}</td>
+                        <td class="text-blue-500 font-medium">${r.dyspnea}</td>
+                        <td class="text-purple-500 font-medium">${r.constipation}</td>
+                        <td class="text-xs text-gray-500 truncate max-w-[150px]" title="${r.note}">${r.note}</td>
+                    </tr>
+                `).join('');
+
+                tabContent = `
+                    <div class="mb-6 flex justify-between items-center">
+                        <h4 class="font-medium text-gray-700">บันทึกอาการและสัญญาณชีพ</h4>
+                        <button onclick="openDailyRecordForm('${p.id}')" class="px-4 py-2 bg-sky-600 text-white text-sm rounded-lg hover:bg-sky-700 flex items-center gap-2"><i class="ph ph-plus"></i> เพิ่มบันทึกประจำวัน</button>
+                    </div>
+                    
+                    <!-- Graph Section (Double Charts) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white border border-gray-100 rounded-xl p-4 h-64 shadow-sm">
+                            <h5 class="font-semibold text-gray-700 text-xs mb-2">กราฟคะแนนอาการรบกวนประจำวัน (Pain / Dyspnea)</h5>
+                            <canvas id="patientTrendChart"></canvas>
+                        </div>
+                        <div class="bg-white border border-gray-100 rounded-xl p-4 h-64 shadow-sm">
+                            <h5 class="font-semibold text-gray-700 text-xs mb-2">กราฟสัญญาณชีพประจำวัน (BP / Pulse Rate / Temp)</h5>
+                            <canvas id="patientVitalsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="overflow-x-auto bg-gray-50 rounded-xl border border-gray-100">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100 text-gray-600 text-xs">
+                                <tr>
+                                    <th class="py-2 px-2">วันที่</th>
+                                    <th class="py-2 px-2">BP</th><th class="py-2 px-2">HR (PR)</th><th class="py-2 px-2">RR</th><th class="py-2 px-2">Temp (BT)</th><th class="py-2 px-2">SpO2</th>
+                                    <th class="py-2 px-2">Pain</th><th class="py-2 px-2">Dyspnea</th><th class="py-2 px-2">Bowel</th>
+                                    <th class="py-2 px-2">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>${recordRows || '<tr><td colspan="10" class="text-center py-4 text-gray-400">ไม่มีประวัติการบันทึก</td></tr>'}</tbody>
+                        </table>
+                    </div>
+
+                    <!-- Daily Form Modal (Hidden initially) -->
+                    <div id="dailyRecordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-bold">บันทึกอาการรายวัน</h3>
+                                <button onclick="closeDailyRecordForm()" class="text-gray-400 hover:text-gray-600"><i class="ph ph-x text-xl"></i></button>
+                            </div>
+                            <form onsubmit="handleSaveDailyRecord(event, '${p.id}')" class="space-y-4">
+                                <div><label class="block text-sm mb-1">วันที่</label><input type="date" id="dr_date" class="w-full border rounded p-2" required value="${new Date().toISOString().split('T')[0]}"></div>
+                                <h4 class="font-medium text-sm text-sky-700 bg-sky-50 p-2 rounded">Vitals Sign</h4>
+                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                    <div><label class="block text-xs mb-1">BP (mmHg)</label><input type="text" id="dr_bp" class="w-full border rounded p-1 text-sm" placeholder="120/80"></div>
+                                    <div><label class="block text-xs mb-1">Pulse (bpm)</label><input type="number" id="dr_hr" class="w-full border rounded p-1 text-sm"></div>
+                                    <div><label class="block text-xs mb-1">RR (/min)</label><input type="number" id="dr_rr" class="w-full border rounded p-1 text-sm"></div>
+                                    <div><label class="block text-xs mb-1">Temp (°C)</label><input type="number" step="0.1" id="dr_temp" class="w-full border rounded p-1 text-sm"></div>
+                                    <div><label class="block text-xs mb-1">SpO2 (%)</label><input type="number" id="dr_o2" class="w-full border rounded p-1 text-sm"></div>
+                                </div>
+                                <h4 class="font-medium text-sm text-orange-700 bg-orange-50 p-2 rounded">Symptom Score (0-10)</h4>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div><label class="block text-xs mb-1">ปวด (Pain)</label><input type="number" min="0" max="10" id="dr_pain" class="w-full border rounded p-1 text-sm" value="0"></div>
+                                    <div><label class="block text-xs mb-1">เหนื่อย (Dyspnea)</label><input type="number" min="0" max="10" id="dr_dyspnea" class="w-full border rounded p-1 text-sm" value="0"></div>
+                                    <div><label class="block text-xs mb-1">ซึมเศร้า (Depression)</label><input type="number" min="0" max="10" id="dr_dep" class="w-full border rounded p-1 text-sm" value="0"></div>
+                                    <div><label class="block text-xs mb-1">ท้องผูก (Constipation)</label><input type="number" min="0" max="10" id="dr_cons" class="w-full border rounded p-1 text-sm" value="0"></div>
+                                </div>
+                                <div><label class="block text-sm mb-1">บันทึกเพิ่มเติมจากทีม (Notes)</label><textarea id="dr_note" class="w-full border rounded p-2 text-sm h-16"></textarea></div>
+                                <div class="flex justify-end pt-3"><button type="submit" class="bg-sky-600 text-white px-4 py-2 rounded">บันทึก</button></div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+
+                // Draw daily tracking graphs
+                setTimeout(() => {
+                    const canvasSymptoms = document.getElementById('patientTrendChart');
+                    const canvasVitals = document.getElementById('patientVitalsChart');
+                    
+                    if(records.length > 0) {
+                        const r = [...records].reverse(); // Oldest first
+                        
+                        // Chart 1: Symptoms Score
+                        if (canvasSymptoms) {
+                            new Chart(canvasSymptoms, {
+                                type: 'line',
+                                data: {
+                                    labels: r.map(x => formatDate(x.date)),
+                                    datasets: [
+                                        { label: 'Pain', data: r.map(x => x.pain), borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.05)', tension: 0.3 },
+                                        { label: 'Dyspnea', data: r.map(x => x.dyspnea), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)', tension: 0.3 }
+                                    ]
+                                },
+                                options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 10 } } }
+                            });
+                        }
+
+                        // Chart 2: Vital Signs (BP Sys/Dia, Pulse Rate, Body Temperature)
+                        if (canvasVitals) {
+                            new Chart(canvasVitals, {
+                                type: 'line',
+                                data: {
+                                    labels: r.map(x => formatDate(x.date)),
+                                    datasets: [
+                                        { label: 'Systolic BP (mmHg)', data: r.map(x => parseBP(x.bp).sys), borderColor: '#f87171', tension: 0.2, yAxisID: 'y' },
+                                        { label: 'Diastolic BP (mmHg)', data: r.map(x => parseBP(x.bp).dia), borderColor: '#fb923c', tension: 0.2, yAxisID: 'y' },
+                                        { label: 'Pulse Rate (bpm)', data: r.map(x => parseInt(x.hr) || null), borderColor: '#60a5fa', tension: 0.2, yAxisID: 'y' },
+                                        { label: 'Temp (BT °C)', data: r.map(x => parseFloat(x.temp) || null), borderColor: '#34d399', tension: 0.2, yAxisID: 'y2' }
+                                    ]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    scales: {
+                                        y: { type: 'linear', position: 'left', title: { display: true, text: 'ความดัน / ชีพจร' } },
+                                        y2: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, min: 35, max: 41, title: { display: true, text: 'อุณหภูมิ (°C)' } }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }, 100);
+            }
+
+            container.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+                    <!-- Header -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 text-3xl">
+                                <i class="ph-fill ${p.gender === 'หญิง' ? 'ph-user-focus' : 'ph-user'}"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-800">${p.name}</h2>
+                                <p class="text-gray-500">HN: ${p.hn} | ${p.patientType}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="navigate('add-patient', {patientId: '${p.id}'})" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition font-medium"><i class="ph ph-pencil-simple mr-1"></i> แก้ไข</button>
+                            <button onclick="exportPatientData('${p.id}')" class="px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm hover:bg-green-100 transition font-medium"><i class="ph ph-file-xls mr-1"></i> ส่งออกข้อมูล</button>
+                        </div>
+                    </div>
+
+                    ${dnrBanner}
+                    ${tabHeader}
+                    <div class="min-h-[300px]">
+                        ${tabContent}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- DAILY RECORD MODAL LOGIC ---
+        window.openDailyRecordForm = function(patientId) {
+            document.getElementById('dailyRecordModal').classList.remove('hidden');
+        };
+        window.closeDailyRecordForm = function() {
+            document.getElementById('dailyRecordModal').classList.add('hidden');
+        };
+        window.handleSaveDailyRecord = function(e, patientId) {
+            e.preventDefault();
+            const newRecord = {
+                id: Date.now(),
+                patientId: patientId,
+                date: document.getElementById('dr_date').value,
+                bp: document.getElementById('dr_bp').value || '-',
+                hr: document.getElementById('dr_hr').value || '-',
+                rr: document.getElementById('dr_rr').value || '-',
+                temp: document.getElementById('dr_temp').value || '-',
+                o2: document.getElementById('dr_o2').value || '-',
+                pain: parseInt(document.getElementById('dr_pain').value) || 0,
+                dyspnea: parseInt(document.getElementById('dr_dyspnea').value) || 0,
+                depression: parseInt(document.getElementById('dr_dep').value) || 0,
+                constipation: parseInt(document.getElementById('dr_cons').value) || 0,
+                note: document.getElementById('dr_note').value
+            };
+            state.dailyRecords.push(newRecord);
+            closeDailyRecordForm();
+            // re-render detail page
+            render();
+        };
+
+        // --- EXPORT TO EXCEL LOGIC (SheetJS) ---
+        window.exportAllToExcel = function() {
+            if(state.patients.length === 0) { alert('ไม่มีข้อมูลให้ส่งออก'); return; }
+            
+            const exportData = state.patients.map(p => ({
+                'HN': p.hn,
+                'ชื่อ-สกุล': p.name,
+                'อายุ': p.age,
+                'เพศ': p.gender,
+                'ประเภทผู้ป่วย': p.patientType,
+                'ระดับ ADL': p.adlScore,
+                'วันที่รับดูแล': p.admissionDate,
+                'การวินิจฉัยโรค': p.diagnosis,
+                'สิทธิ์การรักษา': p.insurance,
+                'สถานะกู้ชีพ (POLST)': p.polst,
+                'แผนล่วงหน้า (ACP)': p.acp
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "PatientList");
+            XLSX.writeFile(wb, "Palliative_Patients_List.xlsx");
+        };
+
+        window.exportPatientData = function(patientId) {
+            const p = state.patients.find(x => x.id === patientId);
+            const records = state.dailyRecords.filter(r => r.patientId === patientId);
+            
+            // Sheet 1: ข้อมูลผู้ป่วย
+            const infoData = [{
+                'HN': p.hn, 'ชื่อ-สกุล': p.name, 'อายุ': p.age, 'เพศ': p.gender,
+                'โรคประจำตัว': p.underlyingDiseases, 'การวินิจฉัย': p.diagnosis,
+                'POLST': p.polst, 'ACP': p.acp,
+                'ชื่อญาติ': p.relativeName, 'เบอร์ติดต่อ': p.relativePhone
+            }];
+            const wsInfo = XLSX.utils.json_to_sheet(infoData);
+
+            // Sheet 2: รายการยาประจำตัว
+            const medicationsData = (p.medicationsList || []).map(m => ({
+                'ชื่อยา': m.name,
+                'ขนาด (Dose)': m.dosage,
+                'วิธีใช้ (Frequency)': m.frequency
+            }));
+            const wsMeds = XLSX.utils.json_to_sheet(medicationsData);
+
+            // Sheet 3: ผลเลือดประจำปี
+            const bloodTestData = (p.bloodTestsList || []).map(b => ({
+                'ปี พ.ศ.': b.year,
+                'FBS (mg/dL)': b.fbs,
+                'HbA1C (%)': b.hba1c,
+                'eGFR (mL/min/1.73 m2)': b.egfr,
+                'Cholesterol (mg/dL)': b.chol,
+                'HDL (mg/dL)': b.hdl,
+                'LDL (mg/dL)': b.ldl,
+                'Triglyceride (mg/dL)': b.tg
+            }));
+            const wsBlood = XLSX.utils.json_to_sheet(bloodTestData);
+
+            // Sheet 4: บันทึกอาการ
+            const recordData = records.map(r => ({
+                'วันที่': r.date,
+                'BP': r.bp, 'HR': r.hr, 'RR': r.rr, 'Temp': r.temp, 'SpO2': r.o2,
+                'ปวด (0-10)': r.pain, 'เหนื่อย (0-10)': r.dyspnea, 
+                'ซึมเศร้า (0-10)': r.depression, 'ท้องผูก (0-10)': r.constipation,
+                'หมายเหตุ': r.note
+            }));
+            const wsRecords = XLSX.utils.json_to_sheet(recordData);
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, wsInfo, "ข้อมูลทั่วไป");
+            if(medicationsData.length > 0) XLSX.utils.book_append_sheet(wb, wsMeds, "ยาประจำตัว");
+            if(bloodTestData.length > 0) XLSX.utils.book_append_sheet(wb, wsBlood, "ผลเลือดประจำปี");
+            if(recordData.length > 0) XLSX.utils.book_append_sheet(wb, wsRecords, "บันทึกอาการรายวัน");
+            
+            XLSX.writeFile(wb, `Patient_Data_${p.hn}.xlsx`);
+        };
+
+        // --- INIT ---
+        window.onload = () => {
+            navigate('dashboard');
+        };
+    </script>
+</body>
+</html>
