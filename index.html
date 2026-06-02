@@ -143,7 +143,14 @@
         // --- ROUTING ---
         function navigate(view, params = {}) {
             state.currentView = view;
-            if(params.patientId) state.selectedPatientId = params.patientId;
+            
+            // สำคัญ: รีเซ็ตค่า patientId ทุกครั้งที่มีการนำทาง เพื่อป้องกันการบันทึกทับ (Edit mode ค้าง)
+            if(params.patientId) {
+                state.selectedPatientId = params.patientId;
+            } else {
+                state.selectedPatientId = null;
+            }
+
             if(params.tab) state.detailTab = params.tab;
             
             if (view === 'add-patient') {
