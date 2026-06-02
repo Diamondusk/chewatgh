@@ -385,7 +385,7 @@
             }
         };
 
-        // 3. ADD/EDIT PATIENT FORM (แก้ไขช่องกรอก และแก้ไขข้อมูลญาติเพื่อป้องกันฟิลด์ขัดข้อง)
+        // 3. ADD/EDIT PATIENT FORM
         function renderPatientForm(container) {
             const p = state.selectedPatientId ? state.patients.find(x => x.id === state.selectedPatientId) : {};
             const isEdit = !!state.selectedPatientId;
@@ -1223,80 +1223,86 @@
                     </div>
                 </div>
 
-                <!-- Template Report Section for A4 PDF -->
+                <!-- Template Report Section for A4 PDF (แก้ไขให้ความกว้างและสัดส่วนพอดี 1 หน้ากระดาษ A4 แนวตั้ง) -->
                 <div id="pdf-report-template" class="hidden">
-                    <div class="p-8 bg-white text-gray-900 leading-relaxed text-xs space-y-6" style="width: 210mm; min-height: 297mm; font-family: 'Prompt', sans-serif;">
+                    <div class="p-8 bg-white text-gray-900 leading-relaxed text-xs space-y-4" style="width: 210mm; min-height: 297mm; padding: 15mm 15mm; box-sizing: border-box; font-family: 'Prompt', sans-serif;">
                         <!-- Header Document -->
-                        <div class="text-center pb-4 border-b-2 border-sky-500 space-y-1">
-                            <h1 class="text-lg font-bold text-sky-700">ใบสรุปรายงานข้อมูลและสรุปแผนการพยาบาลประคับประคอง</h1>
+                        <div class="text-center pb-3 border-b-2 border-sky-500 space-y-1">
+                            <h1 class="text-base font-bold text-sky-700">ใบสรุปรายงานข้อมูลและสรุปแผนการพยาบาลประคับประคอง</h1>
                             <p class="text-[10px] text-gray-500">สถานชีวาภิบาล วัดทับคล้อ อ.ทับคล้อ จ.พิจิตร</p>
                         </div>
 
                         <!-- General Info -->
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-gray-50 p-3 rounded-lg border">
-                                <h3 class="font-bold text-sky-800 border-b pb-1 mb-2">ข้อมูลผู้ป่วย</h3>
-                                <p><span class="font-semibold">ชื่อ-สกุล:</span> ${p.name || '-'}</p>
-                                <p><span class="font-semibold">HN:</span> ${p.hn || '-'} | <span class="font-semibold">อายุ:</span> ${p.age || '-'} ปี | <span class="font-semibold">เพศ:</span> ${p.gender || '-'}</p>
-                                <p><span class="font-semibold">ประเภทผู้ป่วย:</span> ${p.patientType || '-'}</p>
-                                <p><span class="font-semibold">ระดับการพึ่งพิง (ADL):</span> ${p.adlScore || '-'}</p>
-                                <p><span class="font-semibold">สิทธิ์รักษา:</span> ${p.insurance || '-'}</p>
-                                <p><span class="font-semibold">วันที่รับตัว:</span> ${formatDate(p.admissionDate)}</p>
+                            <div class="bg-gray-50 p-2.5 rounded-lg border text-[11px] space-y-1">
+                                <h3 class="font-bold text-sky-800 border-b pb-1 mb-1">ข้อมูลผู้ป่วย</h3>
+                                <p><span class="font-semibold text-gray-700">ชื่อ-สกุล:</span> ${p.name || '-'}</p>
+                                <p><span class="font-semibold text-gray-700">HN:</span> ${p.hn || '-'} | <span class="font-semibold text-gray-700">อายุ:</span> ${p.age || '-'} ปี | <span class="font-semibold text-gray-700">เพศ:</span> ${p.gender || '-'}</p>
+                                <p><span class="font-semibold text-gray-700">ประเภทผู้ป่วย:</span> ${p.patientType || '-'}</p>
+                                <p><span class="font-semibold text-gray-700">ระดับการพึ่งพิง (ADL):</span> ${p.adlScore || '-'}</p>
+                                <p><span class="font-semibold text-gray-700">สิทธิ์รักษา:</span> ${p.insurance || '-'}</p>
+                                <p><span class="font-semibold text-gray-700">วันที่รับตัว:</span> ${formatDate(p.admissionDate)}</p>
                             </div>
-                            <div class="bg-gray-50 p-3 rounded-lg border">
-                                <h3 class="font-bold text-sky-800 border-b pb-1 mb-2">ข้อมูลญาติผู้ติดต่อ / ผู้ประสงค์</h3>
-                                <p><span class="font-semibold">ญาติผู้ดูแลหลัก:</span> ${p.relativeName || '-'}</p>
-                                <p><span class="font-semibold">ความสัมพันธ์:</span> ${p.relativeRelation || '-'}</p>
-                                <p><span class="font-semibold">เบอร์โทรศัพท์:</span> ${p.relativePhone || '-'}</p>
-                                <p><span class="font-semibold">สถานะกู้ชีพ (POLST):</span> ${p.polst || '-'}</p>
+                            <div class="bg-gray-50 p-2.5 rounded-lg border text-[11px] space-y-1">
+                                <h3 class="font-bold text-sky-800 border-b pb-1 mb-1">ข้อมูลญาติผู้ติดต่อ / แผนการดูแล</h3>
+                                <p><span class="font-semibold text-gray-700">ญาติผู้ดูแลหลัก:</span> ${p.relativeName || '-'}</p>
+                                <p><span class="font-semibold text-gray-700">ความสัมพันธ์:</span> ${p.relativeRelation || '-'}</p>
+                                <p><span class="font-semibold text-gray-700">เบอร์โทรศัพท์:</span> ${p.relativePhone || '-'}</p>
+                                <p><span class="font-semibold text-gray-700">สถานะกู้ชีพ (POLST):</span> ${p.polst || '-'}</p>
                             </div>
                         </div>
 
                         <!-- ACP -->
-                        <div class="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                        <div class="bg-amber-50 p-2.5 rounded-lg border border-amber-200 text-[11px]">
                             <h3 class="font-bold text-amber-900 mb-1">Advance Care Plan (แผนการดูแลล่วงหน้า)</h3>
-                            <p class="whitespace-pre-wrap">${p.acp || 'ไม่มีบันทึกข้อมูล'}</p>
+                            <p class="text-gray-800 whitespace-pre-wrap">${p.acp || 'ไม่มีบันทึกข้อมูล'}</p>
                         </div>
 
                         <!-- Diagnosis -->
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-gray-50 p-3 rounded-lg border">
-                                <h3 class="font-bold text-sky-800 border-b pb-1 mb-2">การวินิจฉัย (Diagnosis)</h3>
-                                <p class="whitespace-pre-wrap">${p.diagnosis || '-'}</p>
+                            <div class="bg-gray-50 p-2.5 rounded-lg border text-[11px]">
+                                <h3 class="font-bold text-sky-800 border-b pb-1 mb-1.5">การวินิจฉัย (Diagnosis)</h3>
+                                <p class="text-gray-800 whitespace-pre-wrap">${p.diagnosis || '-'}</p>
                             </div>
-                            <div class="bg-gray-50 p-3 rounded-lg border">
-                                <h3 class="font-bold text-sky-800 border-b pb-1 mb-2">โรคประจำตัว (Underlying Diseases)</h3>
-                                <p class="whitespace-pre-wrap">${p.underlyingDiseases || '-'}</p>
+                            <div class="bg-gray-50 p-2.5 rounded-lg border text-[11px]">
+                                <h3 class="font-bold text-sky-800 border-b pb-1 mb-1.5">โรคประจำตัว (Underlying Diseases)</h3>
+                                <p class="text-gray-800 whitespace-pre-wrap">${p.underlyingDiseases || '-'}</p>
                             </div>
                         </div>
 
                         <!-- Medications List -->
-                        <div class="bg-gray-50 p-3 rounded-lg border">
-                            <h3 class="font-bold text-sky-800 border-b pb-1 mb-2">รายการยากำลังใช้ในปัจจุบัน</h3>
-                            <div class="grid grid-cols-2 gap-2 text-[10px]">
+                        <div class="bg-gray-50 p-2.5 rounded-lg border text-[11px]">
+                            <h3 class="font-bold text-sky-800 border-b pb-1 mb-1.5">รายการยากำลังใช้ในปัจจุบัน</h3>
+                            <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-[10px]">
                                 ${p.medicationsList && p.medicationsList.length > 0 ? p.medicationsList.map(m => `
-                                    <div class="flex justify-between border-b pb-1">
-                                        <span>• ${m.name}</span>
-                                        <span>${m.dosage} (${m.frequency})</span>
+                                    <div class="flex justify-between border-b border-gray-200 pb-0.5">
+                                        <span class="font-medium text-gray-800">• ${m.name}</span>
+                                        <span class="text-gray-600">${m.dosage} (${m.frequency})</span>
                                     </div>
                                 `).join('') : '<span class="text-gray-400">ไม่มีบันทึกยารักษาสม่ำเสมอ</span>'}
                             </div>
                         </div>
 
                         <!-- Last 3 records of Daily tracking -->
-                        <div class="bg-gray-50 p-3 rounded-lg border">
-                            <h3 class="font-bold text-sky-800 border-b pb-1 mb-2">บันทึกสัญญาณชีพและอาการ 3 ครั้งล่าสุด</h3>
-                            <table class="w-full text-left text-[10px] mt-2">
+                        <div class="bg-gray-50 p-2.5 rounded-lg border text-[11px]">
+                            <h3 class="font-bold text-sky-800 border-b pb-1 mb-1.5">บันทึกสัญญาณชีพและคะแนนอาการล่าสุด</h3>
+                            <table class="w-full text-left text-[10px] mt-1">
                                 <thead>
-                                    <tr class="border-b bg-gray-100">
+                                    <tr class="border-b bg-gray-100 text-gray-700">
                                         <th class="p-1">วันที่</th>
-                                        <th class="p-1">BP</th><th class="p-1">PR</th><th class="p-1">RR</th><th class="p-1">Temp</th><th class="p-1">SpO2</th>
-                                        <th class="p-1 text-red-500">Pain</th><th class="p-1 text-blue-500">Dyspnea</th><th class="p-1">Bowel</th>
+                                        <th class="p-1">BP</th>
+                                        <th class="p-1">HR/PR</th>
+                                        <th class="p-1">RR</th>
+                                        <th class="p-1">Temp</th>
+                                        <th class="p-1">SpO2</th>
+                                        <th class="p-1 text-red-600">Pain</th>
+                                        <th class="p-1 text-blue-600">Dyspnea</th>
+                                        <th class="p-1">Bowel</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${state.dailyRecords.filter(r => r.patientId === p.id).sort((a,b) => new Date(b.date) - new Date(a.date)).slice(-3).map(r => `
-                                        <tr class="border-b">
+                                    ${state.dailyRecords.filter(r => r.patientId === p.id).sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 3).map(r => `
+                                        <tr class="border-b border-gray-200 text-gray-800">
                                             <td class="p-1">${formatDate(r.date)}</td>
                                             <td class="p-1">${r.bp || '-'}</td>
                                             <td class="p-1">${r.hr || '-'}</td>
@@ -1307,19 +1313,19 @@
                                             <td class="p-1 font-semibold text-blue-500">${r.dyspnea}</td>
                                             <td class="p-1">${r.constipation}</td>
                                         </tr>
-                                    `).join('') || '<tr><td colspan="9" class="text-center py-2">ไม่มีประวัติอาการรายวัน</td></tr>'}
+                                    `).join('') || '<tr><td colspan="9" class="text-center py-2 text-gray-400">ไม่มีประวัติอาการรายวัน</td></tr>'}
                                 </tbody>
                             </table>
                         </div>
 
                         <!-- Footer Signatures -->
-                        <div class="grid grid-cols-2 pt-12 gap-8 text-center text-[10px]">
-                            <div>
-                                <p class="mb-8">ลงชื่อ............................................................แพทย์ผู้ดูแล</p>
+                        <div class="grid grid-cols-2 pt-10 gap-8 text-center text-[10px]">
+                            <div class="space-y-1">
+                                <p class="mb-6">ลงชื่อ............................................................แพทย์ผู้ดูแล</p>
                                 <p>(............................................................)</p>
                             </div>
-                            <div>
-                                <p class="mb-8">ลงชื่อ............................................................เจ้าหน้าที่ทีมชีวาภิบาล</p>
+                            <div class="space-y-1">
+                                <p class="mb-6">ลงชื่อ............................................................เจ้าหน้าที่ทีมชีวาภิบาล</p>
                                 <p>(............................................................)</p>
                             </div>
                         </div>
@@ -1433,8 +1439,6 @@
             // อัปเดตขนาดยาจริงในรายการยาของคนไข้ด้วย
             const updatedMeds = (p.medicationsList || []).map(m => {
                 if(m.name === medName) {
-                    // แตกความจุออกเป็นส่วน Dosage และ Frequency ใหม่
-                    // แยกจาก ToDose (ตัวอย่างเช่น "20mg ทุก 4 ชม.")
                     const parts = toDose.split('(');
                     let newD = toDose;
                     let newF = m.frequency;
@@ -1467,7 +1471,7 @@
             }
         };
 
-        // --- EXPORT PDF ACTION ---
+        // --- EXPORT PDF ACTION (แก้ไขจุดนี้เพื่อให้ผลลัพธ์ไม่ล้นหน้ากระดาษ A4 แนวตั้ง) ---
         window.exportToPDF = function(patientId) {
             const p = state.patients.find(x => x.id === patientId);
             if(!p) return;
@@ -1476,10 +1480,10 @@
             element.classList.remove('hidden');
 
             const opt = {
-                margin:       10,
+                margin:       0, // ตั้งค่า Margin ฝั่ง html2pdf เป็น 0 เพื่อให้ความกว้างของเนื้อหา (210mm) ลงตัวกับกระดาษ
                 filename:     `Summary_Report_${p.hn || p.name}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
+                html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
