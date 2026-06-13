@@ -19,16 +19,24 @@
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Prompt', sans-serif; background-color: #f3f4f6; }
-        .tab-active { border-bottom: 2px solid #0ea5e9; color: #0ea5e9; font-weight: 600; }
-        .tab-inactive { color: #6b7280; }
-        .tab-inactive:hover { color: #374151; }
+        body { font-family: 'Prompt', sans-serif; background-color: #fefce8; } /* yellow-50 */
+        
+        /* Temple theme background pattern */
+        .bg-temple {
+            background-color: #fdfaf0;
+            background-image: radial-gradient(#fde68a 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .tab-active { border-bottom: 2px solid #d97706; color: #d97706; font-weight: 600; }
+        .tab-inactive { color: #78350f; } /* amber-900 */
+        .tab-inactive:hover { color: #b45309; }
         
         /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar-thumb { background: #fcd34d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #fbbf24; }
 
         /* Animation for Allergy Alert */
         @keyframes pulse-soft {
@@ -41,41 +49,54 @@
         .html2pdf__page-break { page-break-before: always; }
     </style>
 </head>
-<body class="text-gray-800 h-screen flex overflow-hidden">
+<body class="text-gray-800 h-screen flex overflow-hidden bg-temple">
 
     <!-- Sidebar (Collapsible on Mobile & Desktop) -->
-    <aside id="sidebar" class="w-64 bg-white shadow-md flex-shrink-0 flex flex-col z-20 transition-all duration-300 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0">
-        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <i class="ph ph-heartbeat text-3xl text-rose-500"></i>
+    <aside id="sidebar" class="w-72 bg-white shadow-xl border-r border-amber-100 flex-shrink-0 flex flex-col z-20 transition-all duration-300 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0">
+        <div class="p-6 border-b border-amber-100 flex justify-between items-start bg-amber-50 rounded-br-3xl">
+            <div class="flex items-start gap-3">
+                <i class="ph ph-flower-lotus text-4xl text-amber-600 mt-1 drop-shadow-sm"></i>
                 <div>
-                    <h1 class="font-bold text-lg leading-tight text-gray-800">สถานชีวาภิบาล</h1>
-                    <p class="text-xs text-gray-500">วัดทับคล้อ</p>
+                    <h1 class="font-bold text-lg leading-tight text-amber-900">สถานชีวาภิบาล</h1>
+                    <p class="text-xs text-amber-700 font-medium">วัดป่าทับคล้อ</p>
+                    <div class="mt-3 text-[10px] text-amber-900 leading-snug border-t border-amber-200 pt-2">
+                        <span class="font-bold text-amber-700">นพ. ยตนา มาพันธ์สุ</span><br>
+                        แพทย์เวชศาสตร์ครอบครัว<br>โรงพยาบาลทับคล้อ
+                    </div>
                 </div>
             </div>
             <!-- Close btn for mobile -->
-            <button onclick="toggleSidebar()" class="md:hidden text-gray-500 hover:text-gray-800">
+            <button onclick="toggleSidebar()" class="md:hidden text-amber-700 hover:text-amber-900">
                 <i class="ph ph-x text-2xl"></i>
             </button>
         </div>
         <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
-            <button onclick="navigate('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-gray-600 hover:bg-sky-50 hover:text-sky-600">
-                <i class="ph ph-squares-four text-xl"></i><span>แดชบอร์ด</span>
+            <button onclick="navigate('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors text-gray-600 hover:bg-amber-50 hover:text-amber-700">
+                <i class="ph ph-squares-four text-xl"></i><span>แดชบอร์ดสรุปผล</span>
             </button>
-            <button onclick="navigate('patients')" id="nav-patients" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-gray-600 hover:bg-sky-50 hover:text-sky-600">
+            <button onclick="navigate('patients')" id="nav-patients" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors text-gray-600 hover:bg-amber-50 hover:text-amber-700">
                 <i class="ph ph-users text-xl"></i><span>รายชื่อผู้ป่วยปัจจุบัน</span>
             </button>
-            <button onclick="navigate('pharmacy')" id="nav-pharmacy" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-gray-600 hover:bg-purple-50 hover:text-purple-600">
+            <button onclick="navigate('pharmacy')" id="nav-pharmacy" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors text-gray-600 hover:bg-purple-50 hover:text-purple-700">
                 <i class="ph ph-pill text-xl"></i><span>ระบบเภสัชกรรม (Pharmacy)</span>
             </button>
-            <button onclick="navigate('add-patient')" id="nav-add-patient" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-gray-600 hover:bg-sky-50 hover:text-sky-600">
+            <button onclick="navigate('add-patient')" id="nav-add-patient" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors text-gray-600 hover:bg-amber-50 hover:text-amber-700">
                 <i class="ph ph-user-plus text-xl"></i><span>ลงทะเบียนผู้ป่วยใหม่</span>
             </button>
-            <button onclick="navigate('discharged')" id="nav-discharged" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-gray-600 hover:bg-rose-50 hover:text-rose-600 mt-4">
+            <button onclick="navigate('discharged')" id="nav-discharged" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors text-gray-600 hover:bg-rose-50 hover:text-rose-700 mt-4">
                 <i class="ph ph-user-minus text-xl"></i><span>ประวัติ Discharge</span>
             </button>
         </nav>
-        <div class="p-4 border-t border-gray-100 text-[10px] text-green-600 font-medium text-center bg-green-50">
+        
+        <!-- Warning Message -->
+        <div class="p-4 m-3 border border-red-200 rounded-xl bg-red-50 text-center">
+            <i class="ph-fill ph-warning-circle text-red-600 text-xl mb-1 block"></i>
+            <p class="text-[10px] text-red-800 font-medium leading-relaxed">
+                ไม่อนุญาตให้เผยแพร่ Web app นี้และข้อมูลของผู้ป่วย หากไม่ได้รับอนุญาตจากโรงพยาบาลทับคล้อโดยเด็ดขาด
+            </p>
+        </div>
+        
+        <div class="p-3 text-[10px] text-amber-700 font-medium text-center bg-amber-50 border-t border-amber-100">
             <i class="ph ph-cloud-check"></i> Connected to Supabase v2.0
         </div>
     </aside>
@@ -84,18 +105,19 @@
     <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-10 hidden md:hidden"></div>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-transparent">
         <!-- Header -->
-        <header class="bg-white shadow-sm px-4 md:px-8 py-4 flex justify-between items-center z-0">
+        <header class="bg-white/80 backdrop-blur-md shadow-sm px-4 md:px-8 py-4 flex justify-between items-center z-0 border-b border-amber-100">
             <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="text-gray-500 hover:text-sky-600 focus:outline-none md:hidden">
+                <button onclick="toggleSidebar()" class="text-amber-700 hover:text-amber-900 focus:outline-none md:hidden">
                     <i class="ph ph-list text-2xl"></i>
                 </button>
-                <h2 id="page-title" class="text-lg md:text-xl font-semibold text-gray-700 truncate">แดชบอร์ด</h2>
+                <h2 id="page-title" class="text-lg md:text-xl font-bold text-amber-900 truncate">แดชบอร์ด</h2>
             </div>
             <div class="flex items-center gap-4">
-                <span class="text-sm text-gray-500 hidden md:inline"><i class="ph ph-clock mr-1"></i> <span id="current-date"></span></span>
-                <div class="h-8 w-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm">จน</div>
+                <span class="text-sm text-amber-800 font-medium bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 flex items-center shadow-sm">
+                    <i class="ph ph-clock mr-2 text-lg text-amber-600"></i> <span id="current-date"></span>
+                </span>
             </div>
         </header>
 
@@ -113,6 +135,15 @@
             sidebar.classList.toggle('-translate-x-full');
             overlay.classList.toggle('hidden');
         }
+
+        // Live Clock Update
+        function updateClock() {
+            const now = new Date();
+            const opts = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            document.getElementById('current-date').innerText = now.toLocaleDateString('th-TH', opts);
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
 
         // --- SUPABASE SETUP ---
         const SUPABASE_URL = 'https://hompmaasqrbuwxejswun.supabase.co';
@@ -187,8 +218,6 @@
             return result;
         }
 
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-
         // --- ROUTING ---
         function navigate(view, params = {}) {
             state.currentView = view;
@@ -202,7 +231,7 @@
             }
             
             document.querySelectorAll('nav button').forEach(btn => {
-                btn.classList.remove('bg-sky-100', 'text-sky-700', 'font-medium', 'bg-rose-100', 'text-rose-700', 'bg-purple-100', 'text-purple-700');
+                btn.classList.remove('bg-amber-100', 'text-amber-800', 'font-bold', 'bg-rose-100', 'text-rose-700', 'bg-purple-100', 'text-purple-700');
                 btn.classList.add('text-gray-600');
             });
             
@@ -210,13 +239,13 @@
             const activeBtn = document.getElementById(activeNavId);
             if(activeBtn) {
                 activeBtn.classList.remove('text-gray-600');
-                if (view === 'discharged') activeBtn.classList.add('bg-rose-100', 'text-rose-700', 'font-medium');
-                else if (view === 'pharmacy') activeBtn.classList.add('bg-purple-100', 'text-purple-700', 'font-medium');
-                else activeBtn.classList.add('bg-sky-100', 'text-sky-700', 'font-medium');
+                if (view === 'discharged') activeBtn.classList.add('bg-rose-100', 'text-rose-800', 'font-bold');
+                else if (view === 'pharmacy') activeBtn.classList.add('bg-purple-100', 'text-purple-800', 'font-bold');
+                else activeBtn.classList.add('bg-amber-100', 'text-amber-900', 'font-bold', 'shadow-sm');
             }
 
             const titles = {
-                'dashboard': 'แดชบอร์ดอัจฉริยะ',
+                'dashboard': 'แดชบอร์ดสรุปผล',
                 'patients': 'ระบบจัดการรายชื่อผู้ป่วยปัจจุบัน',
                 'pharmacy': 'ระบบเภสัชกรรม (Smart Pharmacy)',
                 'discharged': 'ประวัติผู้ป่วยที่จำหน่ายแล้ว (Discharge)',
@@ -262,13 +291,13 @@
 
             container.innerHTML = `
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                        <p class="text-gray-500 text-xs md:text-sm">ผู้ป่วยทั้งหมด (Active)</p>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-amber-100">
+                        <p class="text-amber-800 text-xs md:text-sm font-medium">ผู้ป่วยทั้งหมด (Active)</p>
                         <h3 class="text-2xl md:text-3xl font-bold text-gray-800 mt-1">${total} <span class="text-sm font-normal">คน</span></h3>
                     </div>
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-l-4 border-rose-500">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-l-4 border-amber-500">
                         <p class="text-gray-500 text-xs md:text-sm">Palliative Care</p>
-                        <h3 class="text-2xl md:text-3xl font-bold text-rose-600 mt-1">${pal} <span class="text-sm font-normal">คน</span></h3>
+                        <h3 class="text-2xl md:text-3xl font-bold text-amber-600 mt-1">${pal} <span class="text-sm font-normal">คน</span></h3>
                     </div>
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-l-4 border-teal-500">
                         <p class="text-gray-500 text-xs md:text-sm">Intermediate (IMC)</p>
@@ -280,12 +309,12 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <h4 class="font-semibold text-gray-700 mb-4">สัดส่วนตามประเภทผู้ป่วย</h4>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-amber-100">
+                        <h4 class="font-bold text-amber-900 mb-4">สัดส่วนตามประเภทผู้ป่วย</h4>
                         <div class="h-64 flex justify-center">${total === 0 ? '<p class="text-gray-400 mt-20">ไม่มีข้อมูล</p>' : '<canvas id="dashTypeChart"></canvas>'}</div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <h4 class="font-semibold text-gray-700 mb-4">แนวโน้มอาการเฉลี่ย (ตัวอย่าง)</h4>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-amber-100">
+                        <h4 class="font-bold text-amber-900 mb-4">แนวโน้มอาการเฉลี่ย (ตัวอย่าง)</h4>
                         <div class="h-64"><canvas id="symptomChart"></canvas></div>
                     </div>
                 </div>
@@ -299,7 +328,7 @@
                             labels: ['Palliative Care', 'Intermediate (IMC)', 'Elderly Care'],
                             datasets: [{
                                 data: [pal, imc, eld],
-                                backgroundColor: ['#e11d48', '#0d9488', '#2563eb']
+                                backgroundColor: ['#d97706', '#0d9488', '#9ca3af'] // Amber, Teal, Gray
                             }]
                         },
                         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
@@ -312,7 +341,7 @@
                         datasets: [{
                             label: 'คะแนนเฉลี่ย',
                             data: [3.1, 2.4, 1.8, 3.5],
-                            backgroundColor: ['#ef4444', '#3b82f6', '#64748b', '#a855f7']
+                            backgroundColor: ['#ef4444', '#3b82f6', '#64748b', '#d97706']
                         }]
                     },
                     options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 10 } } }
@@ -330,38 +359,38 @@
             };
 
             container.innerHTML = `
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full">
+                <div class="bg-white rounded-2xl shadow-sm border border-amber-100 flex flex-col h-full">
                     <!-- Filters Area -->
-                    <div class="p-4 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row gap-3 items-center rounded-t-2xl">
+                    <div class="p-4 border-b border-amber-100 bg-amber-50/50 flex flex-col md:flex-row gap-3 items-center rounded-t-2xl">
                         <div class="relative w-full md:w-1/3">
                             <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                            <input type="text" id="search_input" value="${state.filters.search}" placeholder="ค้นหา HN, ชื่อ, โรค..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-1 focus:ring-sky-500">
+                            <input type="text" id="search_input" value="${state.filters.search}" placeholder="ค้นหา HN, ชื่อ, โรค..." class="w-full pl-10 pr-4 py-2 border border-amber-200 rounded-lg text-sm focus:ring-1 focus:ring-amber-500">
                         </div>
-                        <select id="filter_type" class="w-full md:w-1/4 border border-gray-200 rounded-lg py-2 px-3 text-sm focus:ring-sky-500">
+                        <select id="filter_type" class="w-full md:w-1/4 border border-amber-200 rounded-lg py-2 px-3 text-sm focus:ring-amber-500">
                             <option value="all">ทุกประเภทผู้ป่วย</option>
                             <option value="Palliative" ${state.filters.type==='Palliative'?'selected':''}>Palliative Care</option>
                             <option value="Intermediate" ${state.filters.type==='Intermediate'?'selected':''}>Intermediate Care (IMC)</option>
                             <option value="Elderly" ${state.filters.type==='Elderly'?'selected':''}>Elderly Care</option>
                         </select>
-                        <select id="filter_adl" class="w-full md:w-1/4 border border-gray-200 rounded-lg py-2 px-3 text-sm focus:ring-sky-500">
+                        <select id="filter_adl" class="w-full md:w-1/4 border border-amber-200 rounded-lg py-2 px-3 text-sm focus:ring-amber-500">
                             <option value="all">ทุกระดับ ADL</option>
                             <option value="สมบูรณ์" ${state.filters.adl==='สมบูรณ์'?'selected':''}>พึ่งพิงสมบูรณ์ (0-4)</option>
                             <option value="บางส่วน" ${state.filters.adl==='บางส่วน'?'selected':''}>พึ่งพิงบางส่วน (5-11)</option>
                             <option value="ตัวเองได้" ${state.filters.adl==='ตัวเองได้'?'selected':''}>ช่วยเหลือตัวเองได้ (12+)</option>
                         </select>
-                        <button onclick="exportAllToExcel('${filterType}')" class="w-full md:w-auto px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium border border-green-200 hover:bg-green-100">
+                        <button onclick="exportAllToExcel('${filterType}')" class="w-full md:w-auto px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-bold border border-green-200 hover:bg-green-100 shadow-sm">
                             <i class="ph ph-file-xls"></i> Export Excel
                         </button>
                     </div>
                     <div class="overflow-x-auto flex-1">
                         <table class="w-full text-left border-collapse whitespace-nowrap">
-                            <thead class="bg-white sticky top-0 shadow-sm text-gray-500 text-xs uppercase tracking-wider">
+                            <thead class="bg-white sticky top-0 shadow-sm text-amber-800 text-xs uppercase tracking-wider">
                                 <tr>
-                                    <th class="py-3 px-4 font-medium border-b">HN / ข้อมูล</th>
-                                    <th class="py-3 px-4 font-medium border-b">ประเภท / ADL</th>
-                                    <th class="py-3 px-4 font-medium border-b">การวินิจฉัย (Dx)</th>
-                                    <th class="py-3 px-4 font-medium border-b text-center">ประวัติแพ้ยา</th>
-                                    <th class="py-3 px-4 font-medium border-b text-center">จัดการ</th>
+                                    <th class="py-3 px-4 font-bold border-b border-amber-100">HN / ข้อมูล</th>
+                                    <th class="py-3 px-4 font-bold border-b border-amber-100">ประเภท / ADL</th>
+                                    <th class="py-3 px-4 font-bold border-b border-amber-100">การวินิจฉัย (Dx)</th>
+                                    <th class="py-3 px-4 font-bold border-b border-amber-100 text-center">ประวัติแพ้ยา</th>
+                                    <th class="py-3 px-4 font-bold border-b border-amber-100 text-center">จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody id="patient-table-body"></tbody>
@@ -409,19 +438,19 @@
                         : `<span class="text-gray-300 text-xs">-</span>`;
                     
                     return `
-                        <tr class="border-b border-gray-50 hover:bg-sky-50 transition-colors">
+                        <tr class="border-b border-amber-50 hover:bg-amber-50 transition-colors">
                             <td class="py-3 px-4">
                                 <div class="font-bold text-gray-800">${p.name || '-'}</div>
                                 <div class="text-[11px] text-gray-500">HN: ${p.hn || '-'} | ${p.age||'-'}ปี ${p.gender||'-'}</div>
                             </td>
                             <td class="py-3 px-4">
-                                <div class="text-xs text-sky-700 bg-sky-50 inline-block px-2 py-0.5 rounded">${p.patientType || '-'}</div>
+                                <div class="text-xs text-amber-800 font-medium bg-amber-100 inline-block px-2 py-0.5 rounded shadow-sm">${p.patientType || '-'}</div>
                                 <div class="text-[11px] text-gray-500 mt-1">${p.adlScore || '-'}</div>
                             </td>
                             <td class="py-3 px-4 text-xs text-gray-600 truncate max-w-[200px]" title="${p.diagnosis}">${p.diagnosis || '-'}</td>
                             <td class="py-3 px-4 text-center">${allergyBadge}</td>
                             <td class="py-3 px-4 text-center">
-                                <button onclick="navigate('patient-detail', {patientId: '${p.id}'})" class="px-3 py-1.5 bg-sky-600 text-white rounded shadow-sm text-xs hover:bg-sky-700 transition">รายละเอียด</button>
+                                <button onclick="navigate('patient-detail', {patientId: '${p.id}'})" class="px-4 py-1.5 bg-amber-600 text-white rounded-lg shadow font-bold text-xs hover:bg-amber-700 transition">รายละเอียด</button>
                             </td>
                         </tr>
                     `;
@@ -475,15 +504,15 @@
                             
                             let actionBtn = '';
                             if(rx.status === 'pending_pharmacy') {
-                                actionBtn = `<button onclick="updateRxStatus('${patient.id}', '${rx.id}', 'dispensed')" class="bg-purple-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-purple-700 w-full md:w-auto">รับเรื่องจ่ายยา (เภสัชกร)</button>`;
+                                actionBtn = `<button onclick="updateRxStatus('${patient.id}', '${rx.id}', 'dispensed')" class="bg-purple-600 text-white px-4 py-1.5 rounded-lg shadow text-xs font-bold hover:bg-purple-700 w-full md:w-auto">รับเรื่องจ่ายยา (เภสัชกร)</button>`;
                             } else if (rx.status === 'dispensed') {
-                                actionBtn = `<button onclick="updateRxStatus('${patient.id}', '${rx.id}', 'received')" class="bg-emerald-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-emerald-700 w-full md:w-auto">ยืนยันรับยา (เจ้าหน้าที่)</button>`;
+                                actionBtn = `<button onclick="updateRxStatus('${patient.id}', '${rx.id}', 'received')" class="bg-emerald-600 text-white px-4 py-1.5 rounded-lg shadow text-xs font-bold hover:bg-emerald-700 w-full md:w-auto">ยืนยันรับยา (เจ้าหน้าที่)</button>`;
                             }
 
                             return `
                                 <div class="border ${hasAllergy ? 'border-red-300' : 'border-gray-200'} rounded-xl p-4 bg-white shadow-sm flex flex-col md:flex-row gap-4 relative">
                                     <div class="absolute top-4 right-4 flex gap-2">
-                                        <button onclick="openEditRxModal('${patient.id}', '${rx.id}')" class="text-gray-400 hover:text-sky-600 text-xs font-medium"><i class="ph ph-pencil-simple"></i> แก้ไข</button>
+                                        <button onclick="openEditRxModal('${patient.id}', '${rx.id}')" class="text-gray-400 hover:text-amber-600 text-xs font-medium"><i class="ph ph-pencil-simple"></i> แก้ไข</button>
                                     </div>
 
                                     <div class="md:w-1/3 border-b md:border-b-0 md:border-r border-gray-100 pb-3 md:pb-0 md:pr-4">
@@ -495,11 +524,11 @@
                                     </div>
                                     <div class="md:w-2/3 flex flex-col justify-between">
                                         <div>
-                                            <h5 class="text-xs font-bold text-sky-800 mb-1">รายการยา (Rx):</h5>
-                                            <ul class="text-xs space-y-1 mb-3">
+                                            <h5 class="text-xs font-bold text-amber-800 mb-1">รายการยา (Rx):</h5>
+                                            <ul class="text-xs space-y-1 mb-3 text-gray-700">
                                                 ${rx.items.map(m => `<li>• <b>${m.medName}</b> - ${m.dose} (${m.freq})</li>`).join('')}
                                             </ul>
-                                            ${rx.plan ? `<div class="text-[11px] bg-gray-50 p-2 rounded text-gray-600"><b>แผนการรักษา:</b> ${rx.plan}</div>` : ''}
+                                            ${rx.plan ? `<div class="text-[11px] bg-amber-50 p-2 rounded text-amber-900 border border-amber-100"><b>แผนการรักษา:</b> ${rx.plan}</div>` : ''}
                                             
                                             <div class="mt-2 text-[10px] text-gray-400 flex gap-4">
                                                 ${rx.pharmacist ? `<span><b>ผู้จ่ายยา:</b> ${rx.pharmacist}</span>` : ''}
@@ -507,7 +536,7 @@
                                             </div>
                                         </div>
                                         <div class="mt-4 flex flex-wrap justify-end gap-2">
-                                            <button onclick="navigate('patient-detail', {patientId: '${patient.id}', tab: 'pharmacy'})" class="text-sky-600 border border-sky-200 hover:bg-sky-50 rounded text-xs font-medium px-3 py-1.5 w-full md:w-auto text-center">ดูประวัติคนไข้</button>
+                                            <button onclick="navigate('patient-detail', {patientId: '${patient.id}', tab: 'pharmacy'})" class="text-amber-700 border border-amber-200 hover:bg-amber-50 rounded-lg text-xs font-bold px-3 py-1.5 w-full md:w-auto text-center">ดูประวัติคนไข้</button>
                                             ${actionBtn}
                                         </div>
                                     </div>
@@ -553,46 +582,46 @@
             const isEdit = !!state.selectedPatientId;
 
             container.innerHTML = `
-                <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mb-10">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-lg font-bold text-gray-800">${isEdit ? 'แก้ไขข้อมูล: ' + (p.name || '') : 'ลงทะเบียนผู้ป่วยใหม่'}</h3>
-                        ${isEdit ? `<button type="button" onclick="navigate('patient-detail', {patientId: '${p.id}'})" class="text-sky-600 text-sm hover:underline">ยกเลิก/กลับ</button>` : ''}
+                <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-amber-100 p-6 md:p-8 mb-10">
+                    <div class="flex justify-between items-center mb-6 border-b border-amber-100 pb-4">
+                        <h3 class="text-lg font-bold text-amber-900"><i class="ph-fill ph-user-plus mr-2"></i>${isEdit ? 'แก้ไขข้อมูล: ' + (p.name || '') : 'ลงทะเบียนผู้ป่วยใหม่'}</h3>
+                        ${isEdit ? `<button type="button" onclick="navigate('patient-detail', {patientId: '${p.id}'})" class="text-amber-600 font-bold text-sm hover:underline">ยกเลิก/กลับ</button>` : ''}
                     </div>
 
                     <form id="patientForm" onsubmit="handleSavePatient(event)" class="space-y-6">
                         <input type="hidden" id="f_id" value="${p.id || ''}">
                         
                         <!-- แจ้งเตือนแพ้ยา (เน้น) -->
-                        <div class="bg-red-50 border-2 border-red-200 rounded-xl p-4 shadow-sm">
+                        <div class="bg-red-50 border border-red-200 rounded-xl p-4 shadow-sm">
                             <label class="block text-sm font-bold text-red-700 mb-1"><i class="ph-fill ph-warning-circle"></i> ประวัติการแพ้ยา (Allergies)</label>
-                            <input type="text" id="f_allergies" value="${p.allergies || ''}" class="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-red-500 text-red-800 font-medium" placeholder="เช่น Penicillin (ผื่นขึ้น), Sulfa (หายใจไม่ออก) หรือขีด - หากไม่มีประวัติ">
+                            <input type="text" id="f_allergies" value="${p.allergies || ''}" class="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-red-800 font-medium bg-white" placeholder="เช่น Penicillin (ผื่นขึ้น), Sulfa (หายใจไม่ออก) หรือขีด - หากไม่มีประวัติ">
                         </div>
 
                         <!-- 1. ข้อมูลทั่วไป -->
-                        <section class="p-4 border border-gray-100 rounded-xl bg-gray-50">
-                            <h4 class="font-bold text-sky-800 mb-4">1. ข้อมูลทั่วไป</h4>
+                        <section class="p-5 border border-amber-100 rounded-xl bg-amber-50/30">
+                            <h4 class="font-bold text-amber-800 mb-4 border-b border-amber-200 pb-2">1. ข้อมูลทั่วไป</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                <div><label class="block text-xs mb-1">HN</label><input type="text" id="f_hn" value="${p.hn || ''}" class="w-full p-2 border rounded text-sm" required></div>
-                                <div class="md:col-span-2"><label class="block text-xs mb-1">ชื่อ-สกุล</label><input type="text" id="f_name" value="${p.name || ''}" class="w-full p-2 border rounded text-sm" required></div>
-                                <div><label class="block text-xs mb-1">อายุ (ปี)</label><input type="number" id="f_age" value="${p.age || ''}" class="w-full p-2 border rounded text-sm"></div>
-                                <div><label class="block text-xs mb-1">เพศ</label>
-                                    <select id="f_gender" class="w-full p-2 border rounded text-sm">
+                                <div><label class="block text-xs font-bold mb-1 text-gray-700">HN</label><input type="text" id="f_hn" value="${p.hn || ''}" class="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500" required></div>
+                                <div class="md:col-span-2"><label class="block text-xs font-bold mb-1 text-gray-700">ชื่อ-สกุล</label><input type="text" id="f_name" value="${p.name || ''}" class="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500" required></div>
+                                <div><label class="block text-xs font-bold mb-1 text-gray-700">อายุ (ปี)</label><input type="number" id="f_age" value="${p.age || ''}" class="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500"></div>
+                                <div><label class="block text-xs font-bold mb-1 text-gray-700">เพศ</label>
+                                    <select id="f_gender" class="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500">
                                         <option value="ชาย" ${p.gender==='ชาย'?'selected':''}>ชาย</option><option value="หญิง" ${p.gender==='หญิง'?'selected':''}>หญิง</option>
                                     </select>
                                 </div>
-                                <div><label class="block text-xs mb-1">สิทธิ์รักษา</label><input type="text" id="f_insurance" value="${p.insurance || ''}" class="w-full p-2 border rounded text-sm"></div>
+                                <div><label class="block text-xs font-bold mb-1 text-gray-700">สิทธิ์รักษา</label><input type="text" id="f_insurance" value="${p.insurance || ''}" class="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500"></div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div><label class="block text-xs mb-1">วันที่รับดูแล</label><input type="date" id="f_admission" value="${p.admissionDate ? p.admissionDate.split('T')[0] : ''}" class="w-full p-2 border rounded text-sm"></div>
-                                <div><label class="block text-xs mb-1">ประเภท</label>
-                                    <select id="f_type" class="w-full p-2 border rounded text-sm">
+                                <div><label class="block text-xs font-bold mb-1 text-gray-700">วันที่รับดูแล</label><input type="date" id="f_admission" value="${p.admissionDate ? p.admissionDate.split('T')[0] : ''}" class="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500"></div>
+                                <div><label class="block text-xs font-bold mb-1 text-gray-700">ประเภท</label>
+                                    <select id="f_type" class="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500">
                                         <option value="Palliative Care" ${p.patientType==='Palliative Care'?'selected':''}>Palliative</option>
                                         <option value="Intermediate Care (IMC)" ${p.patientType==='Intermediate Care (IMC)'?'selected':''}>Intermediate (IMC)</option>
                                         <option value="Elderly Care" ${p.patientType==='Elderly Care'?'selected':''}>Elderly</option>
                                     </select>
                                 </div>
-                                <div><label class="block text-xs mb-1">ADL Score</label>
-                                    <select id="f_adl" class="w-full p-2 border rounded text-sm">
+                                <div><label class="block text-xs font-bold mb-1 text-gray-700">ADL Score</label>
+                                    <select id="f_adl" class="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500">
                                         <option value="พึ่งพิงสมบูรณ์ (0-4)" ${p.adlScore==='พึ่งพิงสมบูรณ์ (0-4)'?'selected':''}>พึ่งพิงสมบูรณ์ (0-4)</option>
                                         <option value="พึ่งพิงบางส่วน (5-11)" ${p.adlScore==='พึ่งพิงบางส่วน (5-11)'?'selected':''}>พึ่งพิงบางส่วน (5-11)</option>
                                         <option value="ช่วยเหลือตัวเองได้ (12+)" ${p.adlScore==='ช่วยเหลือตัวเองได้ (12+)'?'selected':''}>ช่วยเหลือตัวเองได้ (12+)</option>
@@ -603,60 +632,60 @@
 
                         <!-- ญาติ & ประวัติ รพ -->
                         <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="p-4 border border-gray-100 rounded-xl bg-gray-50">
-                                <h4 class="font-bold text-sky-800 mb-3 text-sm">ข้อมูลญาติ/ผู้ดูแล</h4>
+                            <div class="p-5 border border-amber-100 rounded-xl bg-amber-50/30">
+                                <h4 class="font-bold text-amber-800 mb-3 text-sm border-b border-amber-200 pb-2">ข้อมูลญาติ/ผู้ดูแล</h4>
                                 <div class="space-y-3 text-xs">
-                                    <div><label class="mb-1 block">ชื่อ-สกุล</label><input type="text" id="f_relativeName" value="${p.relativeName || ''}" class="w-full p-2 border rounded"></div>
+                                    <div><label class="mb-1 block font-bold text-gray-700">ชื่อ-สกุล</label><input type="text" id="f_relativeName" value="${p.relativeName || ''}" class="w-full p-2 border border-amber-200 rounded-lg"></div>
                                     <div class="flex gap-2">
-                                        <div class="w-1/2"><label class="mb-1 block">เกี่ยวข้อง</label><input type="text" id="f_relativeRelation" value="${p.relativeRelation || ''}" class="w-full p-2 border rounded"></div>
-                                        <div class="w-1/2"><label class="mb-1 block">เบอร์</label><input type="text" id="f_relativePhone" value="${p.relativePhone || ''}" class="w-full p-2 border rounded"></div>
+                                        <div class="w-1/2"><label class="mb-1 block font-bold text-gray-700">เกี่ยวข้อง</label><input type="text" id="f_relativeRelation" value="${p.relativeRelation || ''}" class="w-full p-2 border border-amber-200 rounded-lg"></div>
+                                        <div class="w-1/2"><label class="mb-1 block font-bold text-gray-700">เบอร์</label><input type="text" id="f_relativePhone" value="${p.relativePhone || ''}" class="w-full p-2 border border-amber-200 rounded-lg"></div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="p-4 border border-gray-100 rounded-xl bg-gray-50">
-                                <h4 class="font-bold text-sky-800 mb-3 text-sm">ประวัติพื้นฐาน / POLST</h4>
+                            <div class="p-5 border border-amber-100 rounded-xl bg-amber-50/30">
+                                <h4 class="font-bold text-amber-800 mb-3 text-sm border-b border-amber-200 pb-2">ประวัติพื้นฐาน / POLST</h4>
                                 <div class="space-y-3 text-xs">
-                                    <div><label class="mb-1 block">ประวัติแอดมิท รพ.</label><input type="text" id="f_hospitalHistory" value="${p.hospitalHistory || ''}" class="w-full p-2 border rounded"></div>
-                                    <div><label class="mb-1 block">สถานะกู้ชีพ (POLST)</label>
-                                        <select id="f_polst" class="w-full p-2 border rounded font-bold ${p.polst?.includes('DNR')?'text-red-600':'text-green-600'}">
+                                    <div><label class="mb-1 block font-bold text-gray-700">ประวัติแอดมิท รพ.</label><input type="text" id="f_hospitalHistory" value="${p.hospitalHistory || ''}" class="w-full p-2 border border-amber-200 rounded-lg"></div>
+                                    <div><label class="mb-1 block font-bold text-gray-700">สถานะกู้ชีพ (POLST)</label>
+                                        <select id="f_polst" class="w-full p-2 border border-amber-200 rounded-lg font-bold ${p.polst?.includes('DNR')?'text-red-600':'text-green-600'}">
                                             <option value="DNR (Do Not Resuscitate)" ${p.polst?.includes('DNR')?'selected':''}>DNR (ห้ามปั๊มหัวใจ)</option>
                                             <option value="Full Code" ${p.polst?.includes('Full Code')?'selected':''}>Full Code (กู้ชีพเต็มที่)</option>
                                         </select>
                                     </div>
-                                    <div><label class="mb-1 block">ACP เบื้องต้น</label><input type="text" id="f_acp" value="${p.acp || ''}" class="w-full p-2 border rounded"></div>
+                                    <div><label class="mb-1 block font-bold text-gray-700">ACP เบื้องต้น</label><input type="text" id="f_acp" value="${p.acp || ''}" class="w-full p-2 border border-amber-200 rounded-lg"></div>
                                 </div>
                             </div>
                         </section>
 
                         <!-- Medical -->
-                        <section class="p-4 border border-gray-100 rounded-xl bg-gray-50">
-                            <h4 class="font-bold text-sky-800 mb-4">2. ข้อมูลการแพทย์</h4>
+                        <section class="p-5 border border-amber-100 rounded-xl bg-amber-50/30">
+                            <h4 class="font-bold text-amber-800 mb-4 border-b border-amber-200 pb-2">2. ข้อมูลการแพทย์</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-xs">
-                                <div><label class="mb-1 block">Diagnosis</label><textarea id="f_dx" class="w-full p-2 border rounded h-16">${p.diagnosis || ''}</textarea></div>
-                                <div><label class="mb-1 block">โรคประจำตัว</label><textarea id="f_underlying" class="w-full p-2 border rounded h-16">${p.underlyingDiseases || ''}</textarea></div>
-                                <div class="md:col-span-2"><label class="mb-1 block">ผลแลปอื่นๆ</label><textarea id="f_otherLabs" class="w-full p-2 border rounded h-12">${p.otherLabs || ''}</textarea></div>
+                                <div><label class="mb-1 block font-bold text-gray-700">Diagnosis</label><textarea id="f_dx" class="w-full p-2 border border-amber-200 rounded-lg h-16">${p.diagnosis || ''}</textarea></div>
+                                <div><label class="mb-1 block font-bold text-gray-700">โรคประจำตัว</label><textarea id="f_underlying" class="w-full p-2 border border-amber-200 rounded-lg h-16">${p.underlyingDiseases || ''}</textarea></div>
+                                <div class="md:col-span-2"><label class="mb-1 block font-bold text-gray-700">ผลแลปอื่นๆ</label><textarea id="f_otherLabs" class="w-full p-2 border border-amber-200 rounded-lg h-12">${p.otherLabs || ''}</textarea></div>
                             </div>
 
                             <!-- เลือดประจำปี -->
-                            <div class="border rounded-lg bg-white p-3">
-                                <h5 class="font-bold text-rose-700 text-xs mb-2">เพิ่มผลเลือดประจำปี</h5>
+                            <div class="border border-amber-200 rounded-lg bg-white p-4 shadow-sm">
+                                <h5 class="font-bold text-amber-700 text-xs mb-3">เพิ่มผลเลือดประจำปี</h5>
                                 <div class="grid grid-cols-2 md:grid-cols-9 gap-2 items-end">
-                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500">ปี</label><input type="number" id="add_blood_year" class="w-full p-1 border rounded text-xs" value="${new Date().getFullYear() + 543}"></div>
-                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500">FBS</label><input type="number" id="add_blood_fbs" class="w-full p-1 border rounded text-xs"></div>
-                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500">HbA1C</label><input type="number" step="0.1" id="add_blood_hba1c" class="w-full p-1 border rounded text-xs"></div>
-                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500">eGFR</label><input type="number" step="0.1" id="add_blood_egfr" class="w-full p-1 border rounded text-xs"></div>
-                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500">Chol</label><input type="number" id="add_blood_chol" class="w-full p-1 border rounded text-xs"></div>
-                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500">HDL</label><input type="number" id="add_blood_hdl" class="w-full p-1 border rounded text-xs"></div>
-                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500">LDL</label><input type="number" id="add_blood_ldl" class="w-full p-1 border rounded text-xs"></div>
-                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500">TG</label><input type="number" id="add_blood_tg" class="w-full p-1 border rounded text-xs"></div>
-                                    <div class="md:col-span-1"><button type="button" onclick="handleAddBloodTest()" class="w-full py-1 bg-rose-600 text-white rounded text-xs">เพิ่ม</button></div>
+                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500 font-bold">ปี พ.ศ.</label><input type="number" id="add_blood_year" class="w-full p-1 border rounded text-xs bg-gray-50" value="${new Date().getFullYear() + 543}"></div>
+                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500 font-bold">FBS</label><input type="number" id="add_blood_fbs" class="w-full p-1 border rounded text-xs bg-gray-50"></div>
+                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500 font-bold">HbA1C</label><input type="number" step="0.1" id="add_blood_hba1c" class="w-full p-1 border rounded text-xs bg-gray-50"></div>
+                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500 font-bold">eGFR</label><input type="number" step="0.1" id="add_blood_egfr" class="w-full p-1 border rounded text-xs bg-gray-50"></div>
+                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500 font-bold">Chol</label><input type="number" id="add_blood_chol" class="w-full p-1 border rounded text-xs bg-gray-50"></div>
+                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500 font-bold">HDL</label><input type="number" id="add_blood_hdl" class="w-full p-1 border rounded text-xs bg-gray-50"></div>
+                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500 font-bold">LDL</label><input type="number" id="add_blood_ldl" class="w-full p-1 border rounded text-xs bg-gray-50"></div>
+                                    <div class="md:col-span-1"><label class="block text-[9px] text-gray-500 font-bold">TG</label><input type="number" id="add_blood_tg" class="w-full p-1 border rounded text-xs bg-gray-50"></div>
+                                    <div class="md:col-span-1"><button type="button" onclick="handleAddBloodTest()" class="w-full py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-bold">เพิ่ม</button></div>
                                 </div>
-                                <div id="temp-blood-list" class="mt-2 space-y-1"></div>
+                                <div id="temp-blood-list" class="mt-3 space-y-1"></div>
                             </div>
                         </section>
 
-                        <div class="flex justify-end gap-3 border-t pt-4">
-                            <button type="submit" class="px-8 py-3 bg-sky-600 text-white rounded-xl shadow font-bold hover:bg-sky-700 w-full md:w-auto">💾 บันทึกข้อมูลเข้าฐานระบบ</button>
+                        <div class="flex justify-end gap-3 border-t border-amber-200 pt-6">
+                            <button type="submit" class="px-8 py-3 bg-amber-600 text-white rounded-xl shadow-md font-bold hover:bg-amber-700 w-full md:w-auto transition-transform active:scale-95">💾 บันทึกข้อมูลเข้าฐานระบบ</button>
                         </div>
                     </form>
                 </div>
@@ -688,7 +717,7 @@
         window.renderTempBloodTests = function() {
             const c = document.getElementById('temp-blood-list');
             if(!c) return;
-            c.innerHTML = window.tempBloodTests.map((b, i) => `<div class="bg-gray-100 p-1 text-[10px] flex justify-between rounded">ปี ${b.year} | FBS:${b.fbs||'-'} HbA1C:${b.hba1c||'-'} eGFR:${b.egfr||'-'} Lipids:${b.chol||'-'}/${b.hdl||'-'}/${b.ldl||'-'}/${b.tg||'-'} <button type="button" onclick="window.removeTempBloodTest(${i})" class="text-red-500">ลบ</button></div>`).join('');
+            c.innerHTML = window.tempBloodTests.map((b, i) => `<div class="bg-amber-50 border border-amber-100 p-2 text-[10px] flex justify-between rounded items-center"><span class="font-bold text-amber-900">ปี ${b.year}</span> <span class="text-gray-600">FBS:${b.fbs||'-'} HbA1C:${b.hba1c||'-'} eGFR:${b.egfr||'-'} Lipids:${b.chol||'-'}/${b.hdl||'-'}/${b.ldl||'-'}/${b.tg||'-'}</span> <button type="button" onclick="window.removeTempBloodTest(${i})" class="text-red-500 font-bold hover:underline">ลบ</button></div>`).join('');
         };
 
         window.handleSavePatient = async function(e) {
@@ -753,7 +782,7 @@
                 { id: 'records', label: 'บันทึกอาการ' }
             ];
 
-            let tabHeader = `<div class="flex overflow-x-auto border-b border-gray-200 mb-6 gap-2 md:gap-6 hide-scrollbar">`;
+            let tabHeader = `<div class="flex overflow-x-auto border-b border-amber-200 mb-6 gap-2 md:gap-6 hide-scrollbar">`;
             tabs.forEach(t => {
                 const activeClass = state.detailTab === t.id ? 'tab-active' : 'tab-inactive border-transparent';
                 tabHeader += `<button onclick="navigate('patient-detail', {patientId: '${p.id}', tab: '${t.id}'})" class="pb-2 px-1 text-sm md:text-base whitespace-nowrap transition-colors ${activeClass}">${t.label}</button>`;
@@ -764,23 +793,23 @@
             if(state.detailTab === 'info') {
                 tabContent = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                        <div class="bg-gray-50 p-4 rounded-xl space-y-2 border">
-                            <div class="flex justify-between text-gray-500"><span>HN:</span> <span class="text-gray-900 font-medium">${p.hn||'-'}</span></div>
-                            <div class="flex justify-between text-gray-500"><span>อายุ/เพศ:</span> <span class="text-gray-900">${p.age||'-'} ปี / ${p.gender||'-'}</span></div>
-                            <div class="flex justify-between text-gray-500"><span>ประเภท:</span> <span class="text-gray-900">${p.patientType||'-'}</span></div>
-                            <div class="flex justify-between text-gray-500"><span>ADL:</span> <span class="text-gray-900">${p.adlScore||'-'}</span></div>
-                            <div class="flex justify-between text-gray-500"><span>วันที่รับดูแล:</span> <span class="text-gray-900">${formatDate(p.admissionDate)}</span></div>
+                        <div class="bg-amber-50/50 p-5 rounded-xl space-y-2 border border-amber-100 shadow-sm">
+                            <div class="flex justify-between text-gray-500"><span>HN:</span> <span class="text-amber-900 font-bold">${p.hn||'-'}</span></div>
+                            <div class="flex justify-between text-gray-500"><span>อายุ/เพศ:</span> <span class="text-gray-900 font-medium">${p.age||'-'} ปี / ${p.gender||'-'}</span></div>
+                            <div class="flex justify-between text-gray-500"><span>ประเภท:</span> <span class="text-gray-900 font-medium">${p.patientType||'-'}</span></div>
+                            <div class="flex justify-between text-gray-500"><span>ADL:</span> <span class="text-gray-900 font-medium">${p.adlScore||'-'}</span></div>
+                            <div class="flex justify-between text-gray-500"><span>วันที่รับดูแล:</span> <span class="text-gray-900 font-medium">${formatDate(p.admissionDate)}</span></div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-xl space-y-2 border">
-                            <h4 class="font-bold text-sky-800 border-b pb-1 mb-2">ญาติผู้ดูแลหลัก</h4>
-                            <div class="flex justify-between text-gray-500"><span>ชื่อ-สกุล:</span> <span class="text-gray-900">${p.relativeName||'-'}</span></div>
-                            <div class="flex justify-between text-gray-500"><span>เกี่ยวข้อง:</span> <span class="text-gray-900">${p.relativeRelation||'-'}</span></div>
-                            <div class="flex justify-between text-gray-500"><span>เบอร์:</span> <span class="text-sky-600 font-medium">${p.relativePhone||'-'}</span></div>
+                        <div class="bg-amber-50/50 p-5 rounded-xl space-y-2 border border-amber-100 shadow-sm">
+                            <h4 class="font-bold text-amber-800 border-b border-amber-200 pb-1 mb-2">ญาติผู้ดูแลหลัก</h4>
+                            <div class="flex justify-between text-gray-500"><span>ชื่อ-สกุล:</span> <span class="text-gray-900 font-medium">${p.relativeName||'-'}</span></div>
+                            <div class="flex justify-between text-gray-500"><span>เกี่ยวข้อง:</span> <span class="text-gray-900 font-medium">${p.relativeRelation||'-'}</span></div>
+                            <div class="flex justify-between text-gray-500"><span>เบอร์:</span> <span class="text-amber-700 font-bold">${p.relativePhone||'-'}</span></div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-xl border md:col-span-2">
-                            <h4 class="font-bold text-sky-800 mb-2">Diagnosis พื้นฐาน</h4>
-                            <p class="text-xs text-gray-700 whitespace-pre-wrap mb-2"><b>Dx:</b> ${p.diagnosis||'-'}</p>
-                            <p class="text-xs text-gray-700 whitespace-pre-wrap mb-2"><b>โรคประจำตัว:</b> ${p.underlyingDiseases||'-'}</p>
+                        <div class="bg-amber-50/50 p-5 rounded-xl border border-amber-100 md:col-span-2 shadow-sm">
+                            <h4 class="font-bold text-amber-800 mb-2 border-b border-amber-200 pb-1">Diagnosis พื้นฐาน</h4>
+                            <p class="text-xs text-gray-800 whitespace-pre-wrap mb-2 leading-relaxed"><b>Dx:</b> ${p.diagnosis||'-'}</p>
+                            <p class="text-xs text-gray-800 whitespace-pre-wrap mb-2 leading-relaxed"><b>โรคประจำตัว:</b> ${p.underlyingDiseases||'-'}</p>
                         </div>
                     </div>
                 `;
@@ -789,25 +818,25 @@
                 const hospRecords = p.hospitalRecords || [];
                 tabContent = `
                     <div class="mb-4 flex justify-between items-center">
-                        <h4 class="font-bold text-sky-800 text-lg">ประวัติการรักษาในโรงพยาบาลทับคล้อ</h4>
-                        <button onclick="openHospitalModal()" class="px-3 py-1.5 bg-sky-600 text-white text-xs rounded-lg hover:bg-sky-700 shadow font-medium"><i class="ph ph-plus"></i> เพิ่มประวัติใหม่</button>
+                        <h4 class="font-bold text-amber-900 text-lg">ประวัติการรักษาในโรงพยาบาลทับคล้อ</h4>
+                        <button onclick="openHospitalModal()" class="px-3 py-1.5 bg-amber-600 text-white text-xs rounded-lg hover:bg-amber-700 shadow font-bold"><i class="ph ph-plus"></i> เพิ่มประวัติใหม่</button>
                     </div>
                     <div class="space-y-4">
                         ${hospRecords.length > 0 ? 
                         hospRecords.sort((a,b) => new Date(b.date) - new Date(a.date)).map(hr => `
-                            <div class="border border-sky-100 rounded-xl p-4 bg-white shadow-sm hover:shadow-md transition">
-                                <div class="flex justify-between items-start border-b border-sky-50 pb-2 mb-3">
-                                    <span class="font-bold text-sky-800"><i class="ph-fill ph-hospital text-sky-500 mr-1"></i> วันที่เข้ารับการรักษา: ${formatDate(hr.date).split(' ')[0]}</span>
-                                    <button onclick="deleteHospitalRecord('${hr.id}')" class="text-red-400 hover:text-red-600 text-xs font-medium"><i class="ph ph-trash"></i> ลบ</button>
+                            <div class="border border-amber-200 rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition">
+                                <div class="flex justify-between items-start border-b border-amber-100 pb-2 mb-3">
+                                    <span class="font-bold text-amber-800"><i class="ph-fill ph-hospital text-amber-500 mr-1"></i> วันที่เข้ารับการรักษา: ${formatDate(hr.date).split(' ')[0]}</span>
+                                    <button onclick="deleteHospitalRecord('${hr.id}')" class="text-red-400 hover:text-red-600 text-xs font-bold"><i class="ph ph-trash"></i> ลบ</button>
                                 </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
-                                    <div><span class="font-semibold text-gray-500 block mb-1">อาการ / Diagnosis:</span> ${hr.diagnosis || '-'}</div>
-                                    <div><span class="font-semibold text-gray-500 block mb-1">สถานะเมื่อจำหน่าย:</span> <span class="bg-sky-50 text-sky-700 px-2 py-0.5 rounded">${hr.dischargeStatus || '-'}</span></div>
-                                    <div class="md:col-span-2"><span class="font-semibold text-gray-500 block mb-1">การรักษา (Treatment):</span> <p class="whitespace-pre-wrap text-sm">${hr.treatment || '-'}</p></div>
-                                    ${hr.note ? `<div class="md:col-span-2 mt-2 pt-2 border-t border-dashed border-gray-200"><span class="font-semibold text-gray-500 text-xs">หมายเหตุเพิ่มเติม:</span> <p class="text-xs text-gray-500 mt-1">${hr.note}</p></div>` : ''}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800 leading-relaxed">
+                                    <div><span class="font-bold text-amber-700 block mb-1">อาการ / Diagnosis:</span> ${hr.diagnosis || '-'}</div>
+                                    <div><span class="font-bold text-amber-700 block mb-1">สถานะเมื่อจำหน่าย:</span> <span class="bg-amber-100 text-amber-900 font-semibold px-2 py-0.5 rounded">${hr.dischargeStatus || '-'}</span></div>
+                                    <div class="md:col-span-2"><span class="font-bold text-amber-700 block mb-1">การรักษา (Treatment):</span> <p class="whitespace-pre-wrap text-sm">${hr.treatment || '-'}</p></div>
+                                    ${hr.note ? `<div class="md:col-span-2 mt-2 pt-2 border-t border-dashed border-amber-200"><span class="font-bold text-amber-700 text-xs">หมายเหตุเพิ่มเติม:</span> <p class="text-xs text-gray-600 mt-1">${hr.note}</p></div>` : ''}
                                 </div>
                             </div>
-                        `).join('') : '<div class="text-center text-gray-400 py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">ยังไม่มีประวัติการรักษาในโรงพยาบาลทับคล้อ</div>'
+                        `).join('') : '<div class="text-center text-amber-700/50 py-10 bg-amber-50/50 rounded-xl border border-dashed border-amber-200 font-medium">ยังไม่มีประวัติการรักษาในโรงพยาบาลทับคล้อ</div>'
                         }
                     </div>
                 `;
@@ -815,49 +844,49 @@
             else if(state.detailTab === 'acp') {
                 const acpList = p.acpRecords || [];
                 tabContent = `
-                    <div class="mb-4 flex justify-between items-center bg-amber-50 p-4 rounded-xl border border-amber-200">
+                    <div class="mb-4 flex justify-between items-center bg-amber-100/50 p-4 rounded-xl border border-amber-200 shadow-sm">
                         <div>
                             <h4 class="font-bold text-amber-900 text-lg">แบบบันทึก Advanced Care Plan (ACP)</h4>
-                            <p class="text-xs text-amber-700 mt-1">ประวัติการปรับเป้าหมายการรักษาล่วงหน้า และสถานะ POLST ปัจจุบัน</p>
+                            <p class="text-xs text-amber-700 mt-1 font-medium">ประวัติการปรับเป้าหมายการรักษาล่วงหน้า และสถานะ POLST ปัจจุบัน</p>
                         </div>
                         <button onclick="openAcpModal()" class="px-3 py-2 bg-amber-600 text-white text-xs rounded-lg hover:bg-amber-700 shadow font-bold whitespace-nowrap"><i class="ph ph-plus"></i> อัปเดต ACP</button>
                     </div>
 
-                    <div class="mb-6 p-4 border rounded-xl bg-white shadow-sm">
-                        <span class="font-bold text-gray-600 text-sm">POLST (สถานะกู้ชีพหลัก):</span> 
-                        <span class="ml-2 font-bold ${p.polst?.includes('DNR') ? 'text-red-600' : 'text-green-600'}">${p.polst || 'ไม่ได้ระบุ'}</span>
+                    <div class="mb-6 p-4 border border-amber-200 rounded-xl bg-white shadow-sm flex items-center">
+                        <span class="font-bold text-amber-800 text-sm">POLST (สถานะกู้ชีพหลัก):</span> 
+                        <span class="ml-2 font-bold px-3 py-1 rounded bg-gray-50 border ${p.polst?.includes('DNR') ? 'text-red-600 border-red-200' : 'text-green-600 border-green-200'}">${p.polst || 'ไม่ได้ระบุ'}</span>
                     </div>
 
-                    <h5 class="font-bold text-gray-700 mb-3 text-sm"><i class="ph ph-clock-counter-clockwise"></i> ประวัติการอัปเดตเป้าหมาย (Timeline)</h5>
+                    <h5 class="font-bold text-amber-900 mb-3 text-sm"><i class="ph ph-clock-counter-clockwise"></i> ประวัติการอัปเดตเป้าหมาย (Timeline)</h5>
                     <div class="space-y-4">
                         ${acpList.length > 0 ? 
                         acpList.sort((a,b) => new Date(b.date) - new Date(a.date)).map((acp, index) => `
-                            <div class="border ${index === 0 ? 'border-amber-300 shadow-md' : 'border-gray-200'} rounded-xl p-4 bg-white relative">
+                            <div class="border ${index === 0 ? 'border-amber-400 shadow-md ring-1 ring-amber-100' : 'border-amber-200'} rounded-xl p-5 bg-white relative">
                                 ${index === 0 ? '<span class="absolute -top-3 left-4 bg-amber-500 text-white px-2 py-0.5 text-[10px] font-bold rounded-full shadow-sm">ล่าสุด (Current)</span>' : ''}
-                                <div class="flex justify-between items-end border-b border-gray-100 pb-2 mb-3 mt-1">
+                                <div class="flex justify-between items-end border-b border-amber-100 pb-2 mb-3 mt-1">
                                     <div>
-                                        <span class="font-bold text-gray-800 text-sm">วันที่ประเมิน: ${formatDate(acp.date).split(' ')[0]}</span>
-                                        <span class="text-[11px] text-gray-500 ml-2">ผู้บันทึก: ${acp.recordedBy || '-'}</span>
+                                        <span class="font-bold text-amber-900 text-sm">วันที่ประเมิน: ${formatDate(acp.date).split(' ')[0]}</span>
+                                        <span class="text-[11px] text-gray-500 ml-2">ผู้บันทึก: <span class="font-semibold text-amber-800">${acp.recordedBy || '-'}</span></span>
                                     </div>
-                                    <button onclick="deleteAcpRecord('${acp.id}')" class="text-red-400 hover:text-red-600 text-xs font-medium"><i class="ph ph-trash"></i> ลบ</button>
+                                    <button onclick="deleteAcpRecord('${acp.id}')" class="text-red-400 hover:text-red-600 text-xs font-bold"><i class="ph ph-trash"></i> ลบ</button>
                                 </div>
                                 
-                                <div class="bg-gray-50 rounded-lg p-3 mb-3">
-                                    <h6 class="text-xs font-bold text-gray-600 mb-2 border-b border-gray-200 pb-1">เป้าหมายที่ปฏิเสธการรักษา (Goals of Care Limits):</h6>
-                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4 text-xs">
+                                <div class="bg-amber-50/50 rounded-lg p-4 mb-3 border border-amber-100">
+                                    <h6 class="text-xs font-bold text-amber-800 mb-2 border-b border-amber-200 pb-1">เป้าหมายที่ปฏิเสธการรักษา (Goals of Care Limits):</h6>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4 text-xs mt-2">
                                         ${acpGoals.map((id, i) => {
                                             const isChecked = acp['no'+id];
-                                            return `<div class="${isChecked ? 'text-red-600 font-bold' : 'text-gray-400'} flex items-center gap-1.5"><i class="${isChecked ? 'ph-fill ph-check-square' : 'ph ph-square'} text-sm"></i> ${acpLabels[i]}</div>`;
+                                            return `<div class="${isChecked ? 'text-red-600 font-bold' : 'text-gray-500'} flex items-center gap-1.5"><i class="${isChecked ? 'ph-fill ph-check-square' : 'ph ph-square'} text-base"></i> ${acpLabels[i]}</div>`;
                                         }).join('')}
                                     </div>
                                 </div>
                                 
                                 <div>
-                                    <h6 class="text-xs font-bold text-gray-600 mb-1">รายละเอียด/บริบทของครอบครัว:</h6>
-                                    <p class="text-xs text-gray-700 whitespace-pre-wrap">${acp.note || '-'}</p>
+                                    <h6 class="text-xs font-bold text-amber-800 mb-1">รายละเอียด/บริบทของครอบครัว:</h6>
+                                    <p class="text-xs text-gray-800 whitespace-pre-wrap leading-relaxed">${acp.note || '-'}</p>
                                 </div>
                             </div>
-                        `).join('') : '<div class="text-center text-gray-400 py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">ยังไม่มีประวัติการบันทึก ACP แบบละเอียด</div>'
+                        `).join('') : '<div class="text-center text-amber-700/50 py-8 bg-amber-50/50 rounded-xl border border-dashed border-amber-200 font-medium">ยังไม่มีประวัติการบันทึก ACP แบบละเอียด</div>'
                         }
                     </div>
                 `;
@@ -865,27 +894,27 @@
             else if(state.detailTab === 'medical') {
                 tabContent = `
                     <div class="space-y-6">
-                        <div class="bg-sky-50 p-4 rounded-xl border border-sky-100">
-                            <h4 class="font-bold text-sky-800 mb-2">ผลแลป และ ผลการตรวจพิเศษอื่นๆ</h4>
-                            <p class="text-sm whitespace-pre-wrap">${p.otherLabs || 'ไม่มีข้อมูล'}</p>
+                        <div class="bg-amber-50 p-5 rounded-xl border border-amber-200 shadow-sm">
+                            <h4 class="font-bold text-amber-800 mb-2">ผลแลป และ ผลการตรวจพิเศษอื่นๆ</h4>
+                            <p class="text-sm whitespace-pre-wrap text-gray-800 leading-relaxed">${p.otherLabs || 'ไม่มีข้อมูล'}</p>
                         </div>
                         <div>
-                            <h4 class="font-bold text-gray-700 mb-3 text-sm">ตารางผลเลือดประจำปี</h4>
-                            <div class="overflow-x-auto bg-white border rounded-xl">
+                            <h4 class="font-bold text-amber-900 mb-3 text-sm">ตารางผลเลือดประจำปี</h4>
+                            <div class="overflow-x-auto bg-white border border-amber-200 rounded-xl shadow-sm">
                                 <table class="w-full text-xs text-left">
-                                    <thead class="bg-gray-50 text-gray-600 border-b">
-                                        <tr><th class="p-2">ปี พ.ศ.</th><th class="p-2">FBS</th><th class="p-2">HbA1C</th><th class="p-2">eGFR</th><th class="p-2">Chol</th><th class="p-2">HDL</th><th class="p-2 text-red-500">LDL</th><th class="p-2 text-purple-600">TG</th></tr>
+                                    <thead class="bg-amber-50 text-amber-900 border-b border-amber-200">
+                                        <tr><th class="p-3 font-bold">ปี พ.ศ.</th><th class="p-3 font-bold">FBS</th><th class="p-3 font-bold">HbA1C</th><th class="p-3 font-bold">eGFR</th><th class="p-3 font-bold">Chol</th><th class="p-3 font-bold">HDL</th><th class="p-3 font-bold text-red-600">LDL</th><th class="p-3 font-bold text-purple-700">TG</th></tr>
                                     </thead>
                                     <tbody>
-                                        ${p.bloodTestsList && p.bloodTestsList.length>0 ? p.bloodTestsList.map(b => `<tr class="border-b"><td class="p-2 font-bold">${b.year}</td><td class="p-2">${b.fbs||'-'}</td><td class="p-2">${b.hba1c||'-'}</td><td class="p-2 text-emerald-600">${b.egfr||'-'}</td><td class="p-2">${b.chol||'-'}</td><td class="p-2">${b.hdl||'-'}</td><td class="p-2 text-red-500">${b.ldl||'-'}</td><td class="p-2 text-purple-600">${b.tg||'-'}</td></tr>`).join('') : '<tr><td colspan="8" class="p-4 text-center text-gray-400">ไม่มีข้อมูล</td></tr>'}
+                                        ${p.bloodTestsList && p.bloodTestsList.length>0 ? p.bloodTestsList.map(b => `<tr class="border-b border-amber-50 hover:bg-amber-50/50"><td class="p-3 font-bold text-amber-800">${b.year}</td><td class="p-3">${b.fbs||'-'}</td><td class="p-3">${b.hba1c||'-'}</td><td class="p-3 text-emerald-600 font-medium">${b.egfr||'-'}</td><td class="p-3">${b.chol||'-'}</td><td class="p-3">${b.hdl||'-'}</td><td class="p-3 text-red-500 font-medium">${b.ldl||'-'}</td><td class="p-3 text-purple-600 font-medium">${b.tg||'-'}</td></tr>`).join('') : '<tr><td colspan="8" class="p-4 text-center text-amber-700/50 font-medium">ไม่มีข้อมูล</td></tr>'}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                            <div class="border rounded-xl p-3 h-48"><canvas id="sugarTrendChart"></canvas></div>
-                            <div class="border rounded-xl p-3 h-48"><canvas id="kidneyTrendChart"></canvas></div>
-                            <div class="border rounded-xl p-3 h-48"><canvas id="lipidTrendChart"></canvas></div>
+                            <div class="border border-amber-200 rounded-xl p-4 h-48 bg-white shadow-sm"><canvas id="sugarTrendChart"></canvas></div>
+                            <div class="border border-amber-200 rounded-xl p-4 h-48 bg-white shadow-sm"><canvas id="kidneyTrendChart"></canvas></div>
+                            <div class="border border-amber-200 rounded-xl p-4 h-48 bg-white shadow-sm"><canvas id="lipidTrendChart"></canvas></div>
                         </div>
                     </div>
                 `;
@@ -895,7 +924,7 @@
                         const yrs = sb.map(b => b.year);
                         new Chart(document.getElementById('sugarTrendChart'), { type: 'line', data: { labels: yrs, datasets: [ { label: 'FBS', data: sb.map(b=>b.fbs), borderColor: '#ea580c'}, { label: 'HbA1C', data: sb.map(b=>b.hba1c), borderColor: '#db2777'} ] }, options:{responsive:true, maintainAspectRatio:false} });
                         new Chart(document.getElementById('kidneyTrendChart'), { type: 'line', data: { labels: yrs, datasets: [ { label: 'eGFR', data: sb.map(b=>b.egfr), borderColor: '#10b981', fill:true, backgroundColor:'rgba(16,185,129,0.1)'} ] }, options:{responsive:true, maintainAspectRatio:false} });
-                        new Chart(document.getElementById('lipidTrendChart'), { type: 'line', data: { labels: yrs, datasets: [ { label: 'Chol', data: sb.map(b=>b.chol), borderColor: '#475569'}, { label: 'HDL', data: sb.map(b=>b.hdl), borderColor: '#0ea5e9'}, { label: 'LDL', data: sb.map(b=>b.ldl), borderColor: '#ef4444'}, { label: 'TG', data: sb.map(b=>b.tg), borderColor: '#9333ea'} ] }, options:{responsive:true, maintainAspectRatio:false} });
+                        new Chart(document.getElementById('lipidTrendChart'), { type: 'line', data: { labels: yrs, datasets: [ { label: 'Chol', data: sb.map(b=>b.chol), borderColor: '#d97706'}, { label: 'HDL', data: sb.map(b=>b.hdl), borderColor: '#0ea5e9'}, { label: 'LDL', data: sb.map(b=>b.ldl), borderColor: '#ef4444'}, { label: 'TG', data: sb.map(b=>b.tg), borderColor: '#9333ea'} ] }, options:{responsive:true, maintainAspectRatio:false} });
                     }
                 }, 100);
             }
@@ -906,31 +935,31 @@
                 tabContent = `
                     <div class="space-y-6">
                         <!-- รายการยาปัจจุบัน -->
-                        <div class="bg-white border rounded-xl shadow-sm overflow-hidden">
-                            <div class="bg-gray-50 px-4 py-3 flex justify-between items-center border-b">
-                                <h4 class="font-bold text-gray-800"><i class="ph-fill ph-pill text-sky-600"></i> รายการยาปัจจุบัน (Current Meds)</h4>
+                        <div class="bg-white border border-amber-200 rounded-xl shadow-sm overflow-hidden">
+                            <div class="bg-amber-100 px-4 py-3 flex justify-between items-center border-b border-amber-200">
+                                <h4 class="font-bold text-amber-900"><i class="ph-fill ph-pill text-amber-600"></i> รายการยาปัจจุบัน (Current Meds)</h4>
                             </div>
-                            <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm bg-amber-50/30">
                                 ${medsList.length > 0 ? medsList.map(m => `
-                                    <div class="border rounded p-2 flex justify-between bg-sky-50 text-sky-900"><span class="font-bold">${m.name}</span> <span>${m.dosage} (${m.frequency})</span></div>
-                                `).join('') : '<p class="text-gray-400 text-xs">ไม่มียาปัจจุบัน</p>'}
+                                    <div class="border border-amber-200 rounded p-2.5 flex justify-between bg-white text-gray-800 shadow-sm"><span class="font-bold text-amber-800">${m.name}</span> <span>${m.dosage} (${m.frequency})</span></div>
+                                `).join('') : '<p class="text-amber-700/50 text-xs font-medium">ไม่มียาปัจจุบัน</p>'}
                             </div>
                         </div>
 
                         <!-- สั่งยาและค้นหา -->
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b pb-3 gap-3">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-amber-200 pb-3 gap-3">
                             <div class="flex-1 w-full md:w-auto">
-                                <h4 class="font-bold text-purple-800 text-lg mb-2">ประวัติใบสั่งยา (Prescriptions)</h4>
+                                <h4 class="font-bold text-amber-900 text-lg mb-2">ประวัติใบสั่งยา (Prescriptions)</h4>
                                 <div class="relative w-full md:w-72">
                                     <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                    <input type="text" id="rx_search_input" oninput="filterRxList()" placeholder="ค้นหาชื่อยา, แพทย์, หรือสถานะ..." class="w-full pl-9 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 transition-all">
+                                    <input type="text" id="rx_search_input" oninput="filterRxList()" placeholder="ค้นหาชื่อยา, แพทย์, หรือสถานะ..." class="w-full pl-9 pr-3 py-1.5 border border-amber-200 rounded-lg text-sm bg-white focus:ring-1 focus:ring-amber-500 transition-all">
                                 </div>
                             </div>
                             <div class="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
                                 <button onclick="openRemedicationModal('${p.id}')" class="flex-1 md:flex-none bg-teal-600 text-white px-3 py-2 rounded-lg font-bold shadow hover:bg-teal-700 text-xs flex items-center justify-center gap-1">
                                     <i class="ph ph-arrows-clockwise text-base"></i> Remedication
                                 </button>
-                                <button onclick="openPrescriptionModal('${p.id}')" class="flex-1 md:flex-none bg-purple-600 text-white px-3 py-2 rounded-lg font-bold shadow hover:bg-purple-700 text-xs flex items-center justify-center gap-1">
+                                <button onclick="openPrescriptionModal('${p.id}')" class="flex-1 md:flex-none bg-amber-600 text-white px-3 py-2 rounded-lg font-bold shadow hover:bg-amber-700 text-xs flex items-center justify-center gap-1">
                                     <i class="ph ph-plus text-base"></i> สั่งยาใหม่
                                 </button>
                             </div>
@@ -938,18 +967,18 @@
 
                         <!-- รายการประวัติสั่งยา -->
                         <div id="rx_history_list" class="space-y-4">
-                            ${rxList.length === 0 ? '<p class="text-center text-gray-400 py-6">ไม่มีประวัติใบสั่งยา</p>' : rxList.map((rx, idx) => {
+                            ${rxList.length === 0 ? '<p class="text-center text-amber-700/50 py-6 font-medium">ไม่มีประวัติใบสั่งยา</p>' : rxList.map((rx, idx) => {
                                 let sBadge = '', action = '', statusText = '';
                                 if(rx.status === 'pending_pharmacy') {
-                                    sBadge = '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">แพทย์สั่งจ่ายยาแล้ว 🟡</span>';
-                                    action = `<button onclick="updateRxStatus('${p.id}', '${rx.id}', 'dispensed')" class="mt-2 w-full bg-purple-600 text-white py-1.5 rounded text-xs font-bold">รับเรื่องจ่ายยา (Pharmacist)</button>`;
+                                    sBadge = '<span class="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-bold border border-orange-200">แพทย์สั่งจ่ายยาแล้ว 🟡</span>';
+                                    action = `<button onclick="updateRxStatus('${p.id}', '${rx.id}', 'dispensed')" class="mt-2 w-full bg-purple-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-purple-700 shadow-sm">รับเรื่องจ่ายยา (Pharmacist)</button>`;
                                     statusText = 'pending แพทย์สั่งจ่ายยาแล้ว';
                                 } else if (rx.status === 'dispensed') {
-                                    sBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">เภสัชกรจ่ายยาแล้ว 🔵</span>';
-                                    action = `<button onclick="updateRxStatus('${p.id}', '${rx.id}', 'received')" class="mt-2 w-full bg-emerald-600 text-white py-1.5 rounded text-xs font-bold">เจ้าหน้าที่รับยาแล้ว (Caregiver)</button>`;
+                                    sBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold border border-blue-200">เภสัชกรจ่ายยาแล้ว 🔵</span>';
+                                    action = `<button onclick="updateRxStatus('${p.id}', '${rx.id}', 'received')" class="mt-2 w-full bg-emerald-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700 shadow-sm">เจ้าหน้าที่รับยาแล้ว (Caregiver)</button>`;
                                     statusText = 'dispensed เภสัชกรจ่ายยาแล้ว';
                                 } else {
-                                    sBadge = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">เจ้าหน้าที่รับยาแล้ว 🟢</span>';
+                                    sBadge = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold border border-green-200">เจ้าหน้าที่รับยาแล้ว 🟢</span>';
                                     statusText = 'received เจ้าหน้าที่รับยาแล้ว';
                                 }
 
@@ -957,23 +986,23 @@
                                 const searchData = `${rx.doctor || ''} ${rx.pharmacist || ''} ${rx.receiver || ''} ${medNames} ${statusText} ${formatDate(rx.date)}`;
 
                                 return `
-                                <div class="rx-item-card border rounded-xl p-4 bg-white shadow-sm flex flex-col md:flex-row gap-4 relative" data-search="${searchData}">
-                                    <button onclick="openEditRxModal('${p.id}', '${rx.id}')" class="absolute top-4 right-4 text-gray-400 hover:text-sky-600 text-xs font-medium"><i class="ph ph-pencil-simple"></i> แก้ไข</button>
+                                <div class="rx-item-card border border-amber-200 rounded-xl p-5 bg-white shadow-sm flex flex-col md:flex-row gap-4 relative" data-search="${searchData}">
+                                    <button onclick="openEditRxModal('${p.id}', '${rx.id}')" class="absolute top-4 right-4 text-gray-400 hover:text-amber-600 text-xs font-bold"><i class="ph ph-pencil-simple"></i> แก้ไข</button>
                                     
-                                    <div class="md:w-1/4 border-b md:border-b-0 md:border-r pb-2 md:pr-4">
-                                        <div class="flex justify-between items-center mb-2 pr-10"><span class="font-bold text-sm">สถานะ:</span> ${sBadge}</div>
-                                        <p class="text-xs text-gray-500 mt-2">${formatDate(rx.date)}</p>
-                                        <p class="text-[10px] text-gray-500 mt-1"><b>แพทย์:</b> ${rx.doctor}</p>
-                                        ${rx.pharmacist ? `<p class="text-[10px] text-purple-600 mt-1"><b>ผู้จ่าย:</b> ${rx.pharmacist}</p>` : ''}
-                                        ${rx.receiver ? `<p class="text-[10px] text-emerald-600 mt-1"><b>ผู้รับ:</b> ${rx.receiver}</p>` : ''}
+                                    <div class="md:w-1/4 border-b md:border-b-0 md:border-r border-amber-100 pb-3 md:pb-0 md:pr-4">
+                                        <div class="flex justify-between items-center mb-3 pr-10"><span class="font-bold text-sm text-gray-700">สถานะ:</span> ${sBadge}</div>
+                                        <p class="text-xs text-gray-500 mt-2 font-medium"><i class="ph ph-calendar"></i> ${formatDate(rx.date)}</p>
+                                        <p class="text-[10px] text-amber-800 mt-1"><b>แพทย์:</b> ${rx.doctor}</p>
+                                        ${rx.pharmacist ? `<p class="text-[10px] text-purple-700 mt-1"><b>ผู้จ่าย:</b> ${rx.pharmacist}</p>` : ''}
+                                        ${rx.receiver ? `<p class="text-[10px] text-emerald-700 mt-1"><b>ผู้รับ:</b> ${rx.receiver}</p>` : ''}
                                         ${action}
                                     </div>
                                     <div class="md:w-3/4 text-sm mt-2 md:mt-0">
-                                        <h5 class="font-bold text-gray-700 mb-1 border-b pb-1">รายการยา</h5>
+                                        <h5 class="font-bold text-amber-900 mb-2 border-b border-amber-100 pb-1">รายการยา</h5>
                                         <ul class="mb-3 space-y-1">
-                                            ${rx.items.map(i => `<li>- <span class="font-semibold text-purple-800">${i.medName}</span> : <span class="text-gray-600">${i.dose} (${i.freq})</span></li>`).join('')}
+                                            ${rx.items.map(i => `<li><span class="text-amber-600 mr-1">•</span><span class="font-bold text-gray-800">${i.medName}</span> <span class="text-gray-600 ml-1 bg-gray-50 px-1 rounded">${i.dose} (${i.freq})</span></li>`).join('')}
                                         </ul>
-                                        ${rx.plan ? `<div class="bg-gray-50 p-2 text-xs rounded text-gray-700"><b>แผนการรักษา:</b><br>${rx.plan}</div>` : ''}
+                                        ${rx.plan ? `<div class="bg-amber-50 border border-amber-100 p-2.5 text-xs rounded-lg text-amber-900 leading-relaxed"><b>แผนการรักษา:</b><br>${rx.plan}</div>` : ''}
                                     </div>
                                 </div>
                                 `
@@ -985,36 +1014,36 @@
             else if (state.detailTab === 'records') {
                 const records = state.dailyRecords.filter(r => r.patientId === p.id).sort((a,b) => new Date(b.date) - new Date(a.date));
                 let recordRows = records.map(r => `
-                    <tr class="border-b border-gray-100 text-[11px] hover:bg-gray-50">
-                        <td class="py-2.5 px-2">${formatDate(r.date)}</td>
-                        <td class="px-2">${r.bp||'-'}</td><td class="px-2">${r.hr||'-'}</td><td class="px-2">${r.rr||'-'}</td><td class="px-2">${r.temp||'-'}</td><td class="px-2">${r.o2 ? r.o2+'%':'-'}</td>
-                        <td class="text-red-500 font-bold px-2">${r.pain}</td><td class="text-blue-500 font-bold px-2">${r.dyspnea}</td><td class="text-purple-500 px-2">${r.constipation}</td>
-                        <td class="px-2 max-w-[150px] truncate cursor-pointer hover:text-sky-600" onclick="alert('${(r.note || '').replace(/'/g, "\\'")}')" title="${r.note}">${r.note || '-'}</td>
-                        <td class="px-2 text-gray-500">${r.recorderName||'-'}</td>
+                    <tr class="border-b border-amber-100 text-[11px] hover:bg-amber-50">
+                        <td class="py-3 px-3 font-medium text-amber-900">${formatDate(r.date)}</td>
+                        <td class="px-2 text-gray-700">${r.bp||'-'}</td><td class="px-2 text-gray-700">${r.hr||'-'}</td><td class="px-2 text-gray-700">${r.rr||'-'}</td><td class="px-2 text-gray-700">${r.temp||'-'}</td><td class="px-2 text-gray-700">${r.o2 ? r.o2+'%':'-'}</td>
+                        <td class="text-red-600 font-bold px-2">${r.pain}</td><td class="text-blue-600 font-bold px-2">${r.dyspnea}</td><td class="text-amber-700 px-2 font-bold">${r.constipation}</td>
+                        <td class="px-2 max-w-[150px] truncate cursor-pointer text-gray-600 hover:text-amber-600" onclick="alert('${(r.note || '').replace(/'/g, "\\'")}')" title="${r.note}">${r.note || '-'}</td>
+                        <td class="px-2 text-amber-800 font-medium">${r.recorderName||'-'}</td>
                         <td class="px-2 whitespace-nowrap">
-                            <button onclick="openDailyRecordFormForEdit('${r.id}')" class="text-sky-600 hover:underline mr-2">แก้ไข</button>
-                            <button onclick="handleDeleteDailyRecord('${r.id}')" class="text-red-500 hover:underline">ลบ</button>
+                            <button onclick="openDailyRecordFormForEdit('${r.id}')" class="text-amber-600 font-bold hover:underline mr-2">แก้ไข</button>
+                            <button onclick="handleDeleteDailyRecord('${r.id}')" class="text-red-500 font-bold hover:underline">ลบ</button>
                         </td>
                     </tr>
                 `).join('');
 
                 tabContent = `
                     <div class="mb-4 flex justify-between items-center">
-                        <h4 class="font-medium text-gray-700">บันทึกอาการรายวัน</h4>
-                        <button onclick="openDailyRecordFormForAdd()" class="px-3 py-1.5 bg-sky-600 text-white text-xs rounded-lg hover:bg-sky-700 shadow font-medium"><i class="ph ph-plus"></i> เพิ่มบันทึก</button>
+                        <h4 class="font-bold text-amber-900 text-lg">บันทึกอาการรายวัน</h4>
+                        <button onclick="openDailyRecordFormForAdd()" class="px-3 py-1.5 bg-amber-600 text-white text-xs rounded-lg hover:bg-amber-700 shadow font-bold"><i class="ph ph-plus"></i> เพิ่มบันทึก</button>
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                        <div class="border rounded-xl p-3 h-56 shadow-sm"><canvas id="patientTrendChart"></canvas></div>
-                        <div class="border rounded-xl p-3 h-56 shadow-sm"><canvas id="patientVitalsChart"></canvas></div>
+                        <div class="border border-amber-200 rounded-xl p-4 h-56 bg-white shadow-sm"><canvas id="patientTrendChart"></canvas></div>
+                        <div class="border border-amber-200 rounded-xl p-4 h-56 bg-white shadow-sm"><canvas id="patientVitalsChart"></canvas></div>
                     </div>
 
-                    <div class="overflow-x-auto border rounded-xl shadow-sm">
+                    <div class="overflow-x-auto border border-amber-200 rounded-xl shadow-sm">
                         <table class="w-full text-left bg-white">
-                            <thead class="bg-gray-50 text-gray-600 text-[10px] uppercase">
-                                <tr><th class="py-2 px-2">วันที่</th><th class="px-2">BP</th><th class="px-2">HR</th><th class="px-2">RR</th><th class="px-2">BT</th><th class="px-2">SpO2</th><th class="px-2 text-red-600">Pain</th><th class="px-2 text-blue-600">Dys</th><th class="px-2">Bowel</th><th class="px-2">MDT Note</th><th class="px-2">ผู้บันทึก</th><th class="px-2">จัดการ</th></tr>
+                            <thead class="bg-amber-50 text-amber-900 text-[10px] uppercase border-b border-amber-200">
+                                <tr><th class="py-3 px-3 font-bold">วันที่</th><th class="px-2 font-bold">BP</th><th class="px-2 font-bold">HR</th><th class="px-2 font-bold">RR</th><th class="px-2 font-bold">BT</th><th class="px-2 font-bold">SpO2</th><th class="px-2 font-bold text-red-600">Pain</th><th class="px-2 font-bold text-blue-600">Dys</th><th class="px-2 font-bold text-amber-700">Bowel</th><th class="px-2 font-bold">MDT Note</th><th class="px-2 font-bold">ผู้บันทึก</th><th class="px-2 font-bold">จัดการ</th></tr>
                             </thead>
-                            <tbody>${recordRows || '<tr><td colspan="12" class="text-center py-6 text-gray-400">ไม่มีข้อมูล</td></tr>'}</tbody>
+                            <tbody>${recordRows || '<tr><td colspan="12" class="text-center py-6 text-amber-700/50 font-medium">ไม่มีข้อมูล</td></tr>'}</tbody>
                         </table>
                     </div>
                 `;
@@ -1023,27 +1052,27 @@
                     if(records.length > 0) {
                         const r = [...records].reverse();
                         new Chart(document.getElementById('patientTrendChart'), { type: 'line', data: { labels: r.map(x=>formatDate(x.date)), datasets: [ {label:'Pain', data:r.map(x=>x.pain), borderColor:'#ef4444', tension:0.3}, {label:'Dyspnea', data:r.map(x=>x.dyspnea), borderColor:'#3b82f6', tension:0.3} ]}, options: {responsive:true, maintainAspectRatio:false, scales:{y:{max:10,min:0}}} });
-                        new Chart(document.getElementById('patientVitalsChart'), { type: 'line', data: { labels: r.map(x=>formatDate(x.date)), datasets: [ {label:'BP Sys', data:r.map(x=>parseBP(x.bp).sys), borderColor:'#f87171', yAxisID:'y'}, {label:'HR', data:r.map(x=>x.hr), borderColor:'#60a5fa', yAxisID:'y'}, {label:'Temp', data:r.map(x=>x.temp), borderColor:'#34d399', yAxisID:'y2'} ]}, options: {responsive:true, maintainAspectRatio:false, scales:{y2:{position:'right', min:35, max:41}}} });
+                        new Chart(document.getElementById('patientVitalsChart'), { type: 'line', data: { labels: r.map(x=>formatDate(x.date)), datasets: [ {label:'BP Sys', data:r.map(x=>parseBP(x.bp).sys), borderColor:'#f87171', yAxisID:'y'}, {label:'HR', data:r.map(x=>x.hr), borderColor:'#d97706', yAxisID:'y'}, {label:'Temp', data:r.map(x=>x.temp), borderColor:'#34d399', yAxisID:'y2'} ]}, options: {responsive:true, maintainAspectRatio:false, scales:{y2:{position:'right', min:35, max:41}}} });
                     }
                 }, 100);
             }
 
             container.innerHTML = `
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-8">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                        <div class="flex items-center gap-3 w-full md:w-auto">
-                            <div class="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 text-2xl"><i class="ph-fill ph-user"></i></div>
+                <div class="bg-white rounded-2xl shadow-sm border border-amber-100 p-5 md:p-8 relative">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-amber-100 pb-4">
+                        <div class="flex items-center gap-4 w-full md:w-auto">
+                            <div class="h-14 w-14 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 text-3xl shadow-inner border border-amber-200"><i class="ph-fill ph-user"></i></div>
                             <div class="flex-1 truncate">
-                                <h2 class="text-xl font-bold text-gray-800 truncate">${p.name||'-'}</h2>
-                                <p class="text-[11px] text-gray-500 truncate">HN: ${p.hn||'-'} | ${p.patientType||'-'}</p>
+                                <h2 class="text-2xl font-bold text-amber-900 truncate">${p.name||'-'}</h2>
+                                <p class="text-xs text-amber-700 font-medium truncate mt-1">HN: ${p.hn||'-'} | ${p.patientType||'-'}</p>
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full md:w-auto justify-end">
-                            <button onclick="navigate('add-patient', {patientId: '${p.id}'})" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium"><i class="ph ph-pencil-simple"></i> แก้ไขข้อมูล</button>
-                            <button onclick="exportToPDF('${p.id}')" class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-xs font-medium"><i class="ph ph-file-pdf"></i> ดาวน์โหลด PDF</button>
+                            <button onclick="navigate('add-patient', {patientId: '${p.id}'})" class="px-4 py-2 bg-amber-50 text-amber-800 rounded-lg text-xs font-bold border border-amber-200 hover:bg-amber-100 transition shadow-sm"><i class="ph ph-pencil-simple mr-1"></i> แก้ไขข้อมูล</button>
+                            <button onclick="exportToPDF('${p.id}')" class="px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs font-bold hover:bg-red-100 transition shadow-sm"><i class="ph ph-file-pdf mr-1"></i> ดาวน์โหลด PDF</button>
                         </div>
                     </div>
-                    ${hasAllergy ? `<div class="allergy-alert text-red-800 font-bold p-2 text-xs rounded mb-4 text-center shadow-sm border border-red-300">⚠️ ผู้ป่วยมีประวัติแพ้ยา: ${p.allergies}</div>` : ''}
+                    ${hasAllergy ? `<div class="allergy-alert text-red-800 font-bold p-3 text-sm rounded-lg mb-6 text-center shadow-sm border border-red-300">⚠️ ผู้ป่วยมีประวัติแพ้ยา: ${p.allergies}</div>` : ''}
                     ${tabHeader}
                     <div class="min-h-[300px] mt-4">${tabContent}</div>
                 </div>
@@ -1051,150 +1080,152 @@
                 <!-- ALL MODALS INJECTED HERE FOR PATIENT DETAIL -->
                 
                 <!-- Rx Modal -->
-                <div id="rxModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div class="bg-white rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-                        <h3 id="rx_modal_title" class="text-lg font-bold text-purple-800 border-b pb-2 mb-4"><i class="ph-fill ph-stethoscope"></i> สั่งยา / ปรับยา (Prescription)</h3>
-                        ${hasAllergy ? `<div class="bg-red-50 text-red-700 p-3 rounded mb-4 text-sm font-bold border border-red-200">⚠️ ผู้ป่วยแพ้ยา: ${p.allergies}</div>` : ''}
+                <div id="rxModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-3xl w-full max-w-lg p-7 max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <h3 id="rx_modal_title" class="text-xl font-bold text-amber-900 border-b border-amber-100 pb-3 mb-5"><i class="ph-fill ph-stethoscope text-amber-600 mr-2"></i> สั่งยา / ปรับยา (Prescription)</h3>
+                        ${hasAllergy ? `<div class="bg-red-50 text-red-700 p-3 rounded-xl mb-5 text-sm font-bold border border-red-200 shadow-sm"><i class="ph-fill ph-warning-circle mr-1"></i> ผู้ป่วยแพ้ยา: ${p.allergies}</div>` : ''}
                         
-                        <form onsubmit="handleSaveRx(event)" class="space-y-4">
-                            <div><label class="block text-xs mb-1">ชื่อแพทย์ผู้สั่ง (หรือผู้แก้ไข)</label><input type="text" id="rx_doctor" class="w-full border p-2 rounded text-sm" required></div>
+                        <form onsubmit="handleSaveRx(event)" class="space-y-5">
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">ชื่อแพทย์ผู้สั่ง (หรือผู้แก้ไข)</label><input type="text" id="rx_doctor" class="w-full border border-amber-200 p-2.5 rounded-xl text-sm focus:ring-amber-500 bg-amber-50/30" required></div>
                             
-                            <div class="border border-purple-100 rounded-xl p-3 bg-purple-50/50">
-                                <label class="block text-sm font-bold text-purple-800 mb-2"><i class="ph-fill ph-pills"></i> จัดการรายการยา</label>
-                                <div class="flex flex-col gap-2 mb-2 bg-white p-2 rounded border">
-                                    <input type="text" id="rx_medName" placeholder="ชื่อยา" class="w-full border p-1.5 rounded text-sm focus:ring-1 focus:ring-purple-500">
+                            <div class="border border-amber-200 rounded-2xl p-4 bg-amber-50">
+                                <label class="block text-sm font-bold text-amber-900 mb-3"><i class="ph-fill ph-pills text-amber-600 mr-1"></i> จัดการรายการยา</label>
+                                <div class="flex flex-col gap-2 mb-3 bg-white p-3 rounded-xl border border-amber-100 shadow-sm">
+                                    <input type="text" id="rx_medName" placeholder="ชื่อยา" class="w-full border border-gray-200 p-2 rounded-lg text-sm focus:ring-1 focus:ring-amber-500">
                                     <div class="flex gap-2">
-                                        <input type="text" id="rx_dose" placeholder="ขนาด (Dose)" class="w-1/2 border p-1.5 rounded text-sm focus:ring-1 focus:ring-purple-500">
-                                        <input type="text" id="rx_freq" placeholder="วิธีใช้ (Freq)" class="w-1/2 border p-1.5 rounded text-sm focus:ring-1 focus:ring-purple-500">
+                                        <input type="text" id="rx_dose" placeholder="ขนาด (Dose)" class="w-1/2 border border-gray-200 p-2 rounded-lg text-sm focus:ring-1 focus:ring-amber-500">
+                                        <input type="text" id="rx_freq" placeholder="วิธีใช้ (Freq)" class="w-1/2 border border-gray-200 p-2 rounded-lg text-sm focus:ring-1 focus:ring-amber-500">
                                     </div>
-                                    <button type="button" onclick="addRxItem()" class="w-full bg-purple-100 text-purple-800 py-1.5 rounded text-xs font-bold hover:bg-purple-200 mt-1">เพิ่มลงในใบสั่ง</button>
+                                    <button type="button" onclick="addRxItem()" class="w-full bg-amber-100 text-amber-800 py-2 rounded-lg text-xs font-bold hover:bg-amber-200 mt-1 transition">เพิ่มลงในใบสั่ง</button>
                                 </div>
-                                <ul id="rx_temp_list" class="mt-3 space-y-1 text-xs text-gray-700 bg-white rounded border overflow-hidden"></ul>
+                                <ul id="rx_temp_list" class="mt-3 space-y-2 text-sm text-gray-700"></ul>
                             </div>
 
-                            <div><label class="block text-xs mb-1">แผนการรักษา/เหตุผล</label><textarea id="rx_plan" class="w-full border p-2 rounded h-16 text-sm"></textarea></div>
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">แผนการรักษา/เหตุผล</label><textarea id="rx_plan" class="w-full border border-amber-200 p-3 rounded-xl h-20 text-sm focus:ring-amber-500 bg-amber-50/30"></textarea></div>
                             
-                            <div class="flex justify-end gap-2 pt-2">
-                                <button type="button" onclick="closePrescriptionModal()" class="px-4 py-2 bg-gray-200 rounded text-sm font-medium hover:bg-gray-300">ยกเลิก</button>
-                                <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded text-sm font-bold hover:bg-purple-700">บันทึกข้อมูลใบสั่งยา</button>
+                            <div class="flex justify-end gap-3 pt-4 border-t border-amber-100">
+                                <button type="button" onclick="closePrescriptionModal()" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition">ยกเลิก</button>
+                                <button type="submit" class="px-5 py-2.5 bg-amber-600 text-white rounded-xl text-sm font-bold hover:bg-amber-700 transition shadow-md">บันทึกข้อมูลใบสั่งยา</button>
                             </div>
                         </form>
                     </div>
                 </div>
 
                 <!-- Daily Record Modal -->
-                <div id="dailyRecordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 id="dr_modal_title" class="text-lg font-bold text-gray-800">บันทึกอาการประจำวัน</h3>
-                            <button type="button" onclick="closeDailyRecordForm()" class="text-gray-400 hover:text-gray-600"><i class="ph ph-x text-xl"></i></button>
+                <div id="dailyRecordModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-7 shadow-2xl">
+                        <div class="flex justify-between items-center mb-5 border-b border-amber-100 pb-3">
+                            <h3 id="dr_modal_title" class="text-xl font-bold text-amber-900"><i class="ph-fill ph-note-pencil text-amber-600 mr-2"></i> บันทึกอาการประจำวัน</h3>
+                            <button type="button" onclick="closeDailyRecordForm()" class="text-amber-400 hover:text-amber-600 bg-amber-50 rounded-full p-1"><i class="ph ph-x text-xl"></i></button>
                         </div>
-                        <form onsubmit="handleSaveDailyRecord(event, '${p.id}')" class="space-y-4">
+                        <form onsubmit="handleSaveDailyRecord(event, '${p.id}')" class="space-y-5">
                             <div class="grid grid-cols-2 gap-4">
-                                <div><label class="block text-xs mb-1">วันที่เวลา</label><input type="datetime-local" id="dr_date" class="w-full border rounded p-1.5 text-xs" required></div>
-                                <div><label class="block text-xs mb-1">ผู้บันทึก</label><input type="text" id="dr_recorder" class="w-full border rounded p-1.5 text-xs" required></div>
+                                <div><label class="block text-xs font-bold text-gray-700 mb-1">วันที่เวลา</label><input type="datetime-local" id="dr_date" class="w-full border border-amber-200 rounded-xl p-2.5 text-sm focus:ring-amber-500 bg-amber-50/30" required></div>
+                                <div><label class="block text-xs font-bold text-gray-700 mb-1">ผู้บันทึก</label><input type="text" id="dr_recorder" class="w-full border border-amber-200 rounded-xl p-2.5 text-sm focus:ring-amber-500 bg-amber-50/30" required></div>
                             </div>
-                            <div class="bg-sky-50 p-2 rounded">
-                                <h4 class="text-xs font-bold text-sky-800 mb-2">Vitals Sign</h4>
-                                <div class="grid grid-cols-5 gap-2 text-xs">
-                                    <div><label class="block text-[10px]">BP</label><input type="text" id="dr_bp" class="w-full border rounded p-1"></div>
-                                    <div><label class="block text-[10px]">HR</label><input type="number" id="dr_hr" class="w-full border rounded p-1"></div>
-                                    <div><label class="block text-[10px]">RR</label><input type="number" id="dr_rr" class="w-full border rounded p-1"></div>
-                                    <div><label class="block text-[10px]">Temp</label><input type="number" step="0.1" id="dr_temp" class="w-full border rounded p-1"></div>
-                                    <div><label class="block text-[10px]">SpO2</label><input type="number" id="dr_o2" class="w-full border rounded p-1"></div>
+                            <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                                <h4 class="text-sm font-bold text-amber-900 mb-3"><i class="ph-fill ph-heartbeat text-red-500 mr-1"></i> Vitals Sign</h4>
+                                <div class="grid grid-cols-5 gap-3 text-xs">
+                                    <div><label class="block text-[10px] font-bold text-gray-600">BP</label><input type="text" id="dr_bp" class="w-full border border-gray-200 rounded-lg p-2 focus:ring-amber-500"></div>
+                                    <div><label class="block text-[10px] font-bold text-gray-600">HR</label><input type="number" id="dr_hr" class="w-full border border-gray-200 rounded-lg p-2 focus:ring-amber-500"></div>
+                                    <div><label class="block text-[10px] font-bold text-gray-600">RR</label><input type="number" id="dr_rr" class="w-full border border-gray-200 rounded-lg p-2 focus:ring-amber-500"></div>
+                                    <div><label class="block text-[10px] font-bold text-gray-600">Temp</label><input type="number" step="0.1" id="dr_temp" class="w-full border border-gray-200 rounded-lg p-2 focus:ring-amber-500"></div>
+                                    <div><label class="block text-[10px] font-bold text-gray-600">SpO2</label><input type="number" id="dr_o2" class="w-full border border-gray-200 rounded-lg p-2 focus:ring-amber-500"></div>
                                 </div>
                             </div>
-                            <div class="bg-orange-50 p-2 rounded">
-                                <h4 class="text-xs font-bold text-orange-800 mb-2">Symptom Score (0-10)</h4>
-                                <div class="grid grid-cols-4 gap-2 text-xs">
-                                    <div><label class="block text-[10px]">ปวด</label><input type="number" min="0" max="10" id="dr_pain" class="w-full border rounded p-1" value="0"></div>
-                                    <div><label class="block text-[10px]">เหนื่อย</label><input type="number" min="0" max="10" id="dr_dyspnea" class="w-full border rounded p-1" value="0"></div>
-                                    <div><label class="block text-[10px]">ซึมเศร้า</label><input type="number" min="0" max="10" id="dr_dep" class="w-full border rounded p-1" value="0"></div>
-                                    <div><label class="block text-[10px]">ท้องผูก</label><input type="number" min="0" max="10" id="dr_cons" class="w-full border rounded p-1" value="0"></div>
+                            <div class="bg-orange-50 p-4 rounded-2xl border border-orange-100">
+                                <h4 class="text-sm font-bold text-orange-900 mb-3"><i class="ph-fill ph-smiley-sad text-orange-500 mr-1"></i> Symptom Score (0-10)</h4>
+                                <div class="grid grid-cols-4 gap-3 text-xs">
+                                    <div><label class="block text-[10px] font-bold text-gray-600">ปวด (Pain)</label><input type="number" min="0" max="10" id="dr_pain" class="w-full border border-gray-200 rounded-lg p-2 focus:ring-orange-500" value="0"></div>
+                                    <div><label class="block text-[10px] font-bold text-gray-600">เหนื่อย (Dys)</label><input type="number" min="0" max="10" id="dr_dyspnea" class="w-full border border-gray-200 rounded-lg p-2 focus:ring-orange-500" value="0"></div>
+                                    <div><label class="block text-[10px] font-bold text-gray-600">ซึมเศร้า (Dep)</label><input type="number" min="0" max="10" id="dr_dep" class="w-full border border-gray-200 rounded-lg p-2 focus:ring-orange-500" value="0"></div>
+                                    <div><label class="block text-[10px] font-bold text-gray-600">ท้องผูก (Bowel)</label><input type="number" min="0" max="10" id="dr_cons" class="w-full border border-gray-200 rounded-lg p-2 focus:ring-orange-500" value="0"></div>
                                 </div>
                             </div>
                             <div>
-                                <h4 class="text-xs font-bold text-gray-700 mb-2">บันทึกของทีมสหสาขาวิชาชีพ (MDT)</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                                    <textarea id="dr_note_doctor" class="border rounded p-1.5 h-12" placeholder="แพทย์..."></textarea>
-                                    <textarea id="dr_note_nurse" class="border rounded p-1.5 h-12" placeholder="พยาบาล..."></textarea>
-                                    <textarea id="dr_note_pt" class="border rounded p-1.5 h-12" placeholder="นักกายภาพ..."></textarea>
-                                    <textarea id="dr_note_other" class="border rounded p-1.5 h-12" placeholder="อื่นๆ/จิตวิญญาณ..."></textarea>
+                                <h4 class="text-sm font-bold text-amber-900 mb-3"><i class="ph-fill ph-users-three text-amber-600 mr-1"></i> บันทึกของทีมสหสาขาวิชาชีพ (MDT)</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                    <textarea id="dr_note_doctor" class="border border-amber-200 rounded-xl p-3 h-16 focus:ring-amber-500 bg-amber-50/30" placeholder="แพทย์..."></textarea>
+                                    <textarea id="dr_note_nurse" class="border border-amber-200 rounded-xl p-3 h-16 focus:ring-amber-500 bg-amber-50/30" placeholder="พยาบาล..."></textarea>
+                                    <textarea id="dr_note_pt" class="border border-amber-200 rounded-xl p-3 h-16 focus:ring-amber-500 bg-amber-50/30" placeholder="นักกายภาพ..."></textarea>
+                                    <textarea id="dr_note_other" class="border border-amber-200 rounded-xl p-3 h-16 focus:ring-amber-500 bg-amber-50/30" placeholder="อื่นๆ/จิตวิญญาณ..."></textarea>
                                 </div>
                             </div>
-                            <div class="flex justify-end pt-2"><button type="submit" id="dr_submit_btn" class="bg-sky-600 text-white px-6 py-2 rounded shadow font-bold text-sm">บันทึก</button></div>
+                            <div class="flex justify-end pt-4 border-t border-amber-100">
+                                <button type="submit" id="dr_submit_btn" class="bg-amber-600 text-white px-8 py-3 rounded-xl shadow-md font-bold text-sm hover:bg-amber-700 transition">บันทึก</button>
+                            </div>
                         </form>
                     </div>
                 </div>
 
                 <!-- Hospital History Modal -->
-                <div id="hospitalModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div class="bg-white rounded-2xl w-full max-w-lg p-6">
-                        <h3 class="text-lg font-bold text-sky-800 mb-4"><i class="ph-fill ph-hospital"></i> เพิ่มประวัติการรักษา รพ.ทับคล้อ</h3>
-                        <form onsubmit="handleSaveHospital(event)" class="space-y-3">
-                            <div><label class="block text-xs mb-1 font-bold">วันที่เข้ารับการรักษา</label><input type="date" id="hosp_date" class="w-full border p-2 rounded text-sm" required></div>
-                            <div><label class="block text-xs mb-1 font-bold">อาการ / Diagnosis</label><input type="text" id="hosp_dx" class="w-full border p-2 rounded text-sm" required placeholder="ระบุอาการสำคัญ หรือโรคที่วินิจฉัย"></div>
-                            <div><label class="block text-xs mb-1 font-bold">การรักษา (Treatment)</label><textarea id="hosp_tx" class="w-full border p-2 rounded text-sm h-16" placeholder="หัตถการ ยาที่ให้..."></textarea></div>
-                            <div><label class="block text-xs mb-1 font-bold">สถานะจำหน่าย</label><input type="text" id="hosp_status" class="w-full border p-2 rounded text-sm" placeholder="เช่น กลับบ้าน อาการดีขึ้น ทุเลา เสียชีวิต..."></div>
-                            <div><label class="block text-xs mb-1 font-bold">หมายเหตุเพิ่มเติม</label><textarea id="hosp_note" class="w-full border p-2 rounded text-sm h-16"></textarea></div>
-                            <div class="flex justify-end gap-2 pt-2">
-                                <button type="button" onclick="document.getElementById('hospitalModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm">ยกเลิก</button>
-                                <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded text-sm font-bold">บันทึกประวัติ</button>
+                <div id="hospitalModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-3xl w-full max-w-lg p-7 shadow-2xl">
+                        <h3 class="text-xl font-bold text-amber-900 mb-5 border-b border-amber-100 pb-3"><i class="ph-fill ph-hospital text-amber-600 mr-2"></i> เพิ่มประวัติการรักษา รพ.ทับคล้อ</h3>
+                        <form onsubmit="handleSaveHospital(event)" class="space-y-4">
+                            <div><label class="block text-sm mb-1 font-bold text-gray-700">วันที่เข้ารับการรักษา</label><input type="date" id="hosp_date" class="w-full border border-amber-200 p-2.5 rounded-xl text-sm focus:ring-amber-500 bg-amber-50/30" required></div>
+                            <div><label class="block text-sm mb-1 font-bold text-gray-700">อาการ / Diagnosis</label><input type="text" id="hosp_dx" class="w-full border border-amber-200 p-2.5 rounded-xl text-sm focus:ring-amber-500 bg-amber-50/30" required placeholder="ระบุอาการสำคัญ หรือโรคที่วินิจฉัย"></div>
+                            <div><label class="block text-sm mb-1 font-bold text-gray-700">การรักษา (Treatment)</label><textarea id="hosp_tx" class="w-full border border-amber-200 p-3 rounded-xl text-sm h-20 focus:ring-amber-500 bg-amber-50/30" placeholder="หัตถการ ยาที่ให้..."></textarea></div>
+                            <div><label class="block text-sm mb-1 font-bold text-gray-700">สถานะจำหน่าย</label><input type="text" id="hosp_status" class="w-full border border-amber-200 p-2.5 rounded-xl text-sm focus:ring-amber-500 bg-amber-50/30" placeholder="เช่น กลับบ้าน อาการดีขึ้น ทุเลา เสียชีวิต..."></div>
+                            <div><label class="block text-sm mb-1 font-bold text-gray-700">หมายเหตุเพิ่มเติม</label><textarea id="hosp_note" class="w-full border border-amber-200 p-3 rounded-xl text-sm h-16 focus:ring-amber-500 bg-amber-50/30"></textarea></div>
+                            <div class="flex justify-end gap-3 pt-4 border-t border-amber-100">
+                                <button type="button" onclick="document.getElementById('hospitalModal').classList.add('hidden')" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition">ยกเลิก</button>
+                                <button type="submit" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white shadow-md rounded-xl text-sm font-bold transition">บันทึกประวัติ</button>
                             </div>
                         </form>
                     </div>
                 </div>
 
                 <!-- ACP Modal -->
-                <div id="acpModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div class="bg-white rounded-2xl w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto">
-                        <h3 class="text-lg font-bold text-amber-800 mb-4"><i class="ph-fill ph-file-text"></i> อัปเดตแบบบันทึก Advanced Care Plan</h3>
-                        <form onsubmit="handleSaveAcp(event)" class="space-y-4">
+                <div id="acpModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-3xl w-full max-w-xl p-7 max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <h3 class="text-xl font-bold text-amber-900 mb-5 border-b border-amber-100 pb-3"><i class="ph-fill ph-file-text text-amber-600 mr-2"></i> อัปเดตแบบบันทึก Advanced Care Plan</h3>
+                        <form onsubmit="handleSaveAcp(event)" class="space-y-5">
                             <div class="grid grid-cols-2 gap-4">
-                                <div><label class="block text-xs font-bold mb-1">วันที่ประเมิน</label><input type="date" id="acp_date" class="w-full border p-2 rounded text-sm" required></div>
-                                <div><label class="block text-xs font-bold mb-1">ผู้บันทึก/ประเมิน</label><input type="text" id="acp_recorder" class="w-full border p-2 rounded text-sm" required></div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-1">วันที่ประเมิน</label><input type="date" id="acp_date" class="w-full border border-amber-200 p-2.5 rounded-xl text-sm focus:ring-amber-500 bg-amber-50/30" required></div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-1">ผู้บันทึก/ประเมิน</label><input type="text" id="acp_recorder" class="w-full border border-amber-200 p-2.5 rounded-xl text-sm focus:ring-amber-500 bg-amber-50/30" required></div>
                             </div>
                             
-                            <div class="bg-amber-50 p-4 rounded-xl border border-amber-200">
-                                <label class="block text-sm font-bold text-amber-900 mb-3 border-b border-amber-200 pb-2">เป้าหมายการรักษาล่วงหน้า (กรุณาติ๊กเลือกข้อที่ต้องการ <span class="text-red-600">ปฏิเสธ</span>)</label>
+                            <div class="bg-amber-50/80 p-5 rounded-2xl border border-amber-200">
+                                <label class="block text-sm font-bold text-amber-900 mb-4 border-b border-amber-200 pb-2">เป้าหมายการรักษาล่วงหน้า (กรุณาติ๊กเลือกข้อที่ต้องการ <span class="text-red-600">ปฏิเสธ</span>)</label>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                                     ${acpGoals.map((id, index) => `
-                                        <label class="flex items-center gap-2 cursor-pointer hover:bg-amber-100 p-1 rounded transition">
-                                            <input type="checkbox" id="acp_No${id}" class="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-gray-300"> 
-                                            <span class="text-gray-800">${acpLabels[index]}</span>
+                                        <label class="flex items-center gap-3 cursor-pointer hover:bg-amber-100 p-2 rounded-lg transition border border-transparent hover:border-amber-200">
+                                            <input type="checkbox" id="acp_No${id}" class="w-5 h-5 rounded text-red-600 focus:ring-red-500 border-gray-300"> 
+                                            <span class="text-amber-900 font-medium">${acpLabels[index]}</span>
                                         </label>
                                     `).join('')}
                                 </div>
                             </div>
 
                             <div>
-                                <label class="block text-xs font-bold mb-1">รายละเอียด/บริบทของครอบครัวเพิ่มเติม</label>
-                                <textarea id="acp_note" class="w-full border p-3 rounded text-sm h-24" placeholder="เช่น บริบทของครอบครัว, ผู้ตัดสินใจหลักคือใคร, สาเหตุการเปลี่ยนเป้าหมาย..."></textarea>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">รายละเอียด/บริบทของครอบครัวเพิ่มเติม</label>
+                                <textarea id="acp_note" class="w-full border border-amber-200 p-4 rounded-2xl text-sm h-28 focus:ring-amber-500 bg-amber-50/30" placeholder="เช่น บริบทของครอบครัว, ผู้ตัดสินใจหลักคือใคร, สาเหตุการเปลี่ยนเป้าหมาย..."></textarea>
                             </div>
                             
-                            <div class="flex justify-end gap-2 pt-2 border-t">
-                                <button type="button" onclick="document.getElementById('acpModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm">ยกเลิก</button>
-                                <button type="submit" class="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-bold shadow">บันทึก ACP</button>
+                            <div class="flex justify-end gap-3 pt-5 border-t border-amber-100">
+                                <button type="button" onclick="document.getElementById('acpModal').classList.add('hidden')" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition">ยกเลิก</button>
+                                <button type="submit" class="px-7 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-bold shadow-md transition">บันทึก ACP</button>
                             </div>
                         </form>
                     </div>
                 </div>
 
                 <!-- Discharge Modal -->
-                <div id="dischargeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div class="bg-white rounded-2xl w-full max-w-md p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-bold text-gray-800">จำหน่ายผู้ป่วย (Discharge)</h3>
-                            <button onclick="closeDischargeModal()" class="text-gray-400 hover:text-gray-600"><i class="ph ph-x text-xl"></i></button>
+                <div id="dischargeModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-3xl w-full max-w-md p-7 shadow-2xl">
+                        <div class="flex justify-between items-center mb-5 border-b border-amber-100 pb-3">
+                            <h3 class="text-xl font-bold text-amber-900"><i class="ph-fill ph-user-minus text-amber-600 mr-2"></i> จำหน่ายผู้ป่วย (Discharge)</h3>
+                            <button onclick="closeDischargeModal()" class="text-amber-400 hover:text-amber-600 bg-amber-50 p-1 rounded-full"><i class="ph ph-x text-xl"></i></button>
                         </div>
-                        <form onsubmit="handleDischarge(event, '${p.id}')" class="space-y-4">
+                        <form onsubmit="handleDischarge(event, '${p.id}')" class="space-y-5">
                             <div>
-                                <label class="block text-sm mb-1">วันที่ Discharge</label>
-                                <input type="date" id="dis_date" class="w-full border rounded p-2" required value="${new Date().toISOString().split('T')[0]}">
+                                <label class="block text-sm font-bold text-gray-700 mb-1">วันที่ Discharge</label>
+                                <input type="date" id="dis_date" class="w-full border border-amber-200 rounded-xl p-2.5 focus:ring-amber-500 bg-amber-50/30" required value="${new Date().toISOString().split('T')[0]}">
                             </div>
                             <div>
-                                <label class="block text-sm mb-1">สถานะเมื่อ Discharge</label>
-                                <select id="dis_reason" class="w-full border rounded p-2" required>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">สถานะเมื่อ Discharge</label>
+                                <select id="dis_reason" class="w-full border border-amber-200 rounded-xl p-2.5 focus:ring-amber-500 bg-amber-50/30" required>
                                     <option value="Discharged Home (จำหน่ายกลับบ้าน)">Discharged Home (จำหน่ายกลับบ้าน)</option>
                                     <option value="Transferred (ส่งต่อโรงพยาบาล)">Transferred (ส่งต่อโรงพยาบาล)</option>
                                     <option value="Deceased (เสียชีวิตอย่างสงบ)">Deceased (เสียชีวิตอย่างสงบ)</option>
@@ -1202,12 +1233,12 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm mb-1">บันทึกรายละเอียดเพิ่มเติม</label>
-                                <textarea id="dis_note" class="w-full border rounded p-2 h-20" placeholder="ระบุเหตุผล เช่น สิ้นสุดการดูแลรักษาวาระสุดท้าย, นัดติดตามอาการ..."></textarea>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">บันทึกรายละเอียดเพิ่มเติม</label>
+                                <textarea id="dis_note" class="w-full border border-amber-200 rounded-xl p-3 h-24 focus:ring-amber-500 bg-amber-50/30" placeholder="ระบุเหตุผล เช่น สิ้นสุดการดูแลรักษาวาระสุดท้าย, นัดติดตามอาการ..."></textarea>
                             </div>
-                            <div class="flex justify-end pt-3 gap-2">
-                                <button type="button" onclick="closeDischargeModal()" class="bg-gray-100 px-4 py-2 rounded text-sm">ยกเลิก</button>
-                                <button type="submit" class="bg-rose-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-rose-700">จำหน่ายผู้ป่วย</button>
+                            <div class="flex justify-end pt-4 border-t border-amber-100 gap-3">
+                                <button type="button" onclick="closeDischargeModal()" class="bg-gray-100 px-5 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-200">ยกเลิก</button>
+                                <button type="submit" class="bg-red-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-red-700 shadow-md">จำหน่ายผู้ป่วย</button>
                             </div>
                         </form>
                     </div>
@@ -1219,18 +1250,18 @@
                         
                         <!-- PAGE 1 -->
                         <div style="padding: 15mm; min-height: 297mm; box-sizing: border-box;">
-                            <div class="text-center pb-2 border-b-2 border-sky-500 mb-4">
-                                <h1 class="text-base font-bold text-sky-700">ใบสรุปเวชระเบียน (Medical Summary)</h1>
-                                <p class="text-[9px] text-gray-500">สถานชีวาภิบาล วัดทับคล้อ อ.ทับคล้อ จ.พิจิตร | พิมพ์เมื่อ ${new Date().toLocaleDateString('th-TH')}</p>
+                            <div class="text-center pb-2 border-b-2 border-amber-500 mb-4">
+                                <h1 class="text-base font-bold text-amber-800">ใบสรุปเวชระเบียน (Medical Summary)</h1>
+                                <p class="text-[9px] text-gray-500">สถานชีวาภิบาล วัดป่าทับคล้อ อ.ทับคล้อ จ.พิจิตร | พิมพ์เมื่อ ${new Date().toLocaleDateString('th-TH')}</p>
                             </div>
                             ${hasAllergy ? `<div class="bg-red-100 text-red-800 p-2 text-center font-bold mb-4 border border-red-300">⚠️ ประวัติแพ้ยา: ${p.allergies}</div>` : ''}
                             
-                            <h3 class="font-bold bg-gray-200 p-1 mb-2">1. ข้อมูลทั่วไป</h3>
+                            <h3 class="font-bold bg-amber-100 text-amber-900 p-1 mb-2">1. ข้อมูลทั่วไป</h3>
                             <p><b>ชื่อ-สกุล:</b> ${p.name||'-'} <b>HN:</b> ${p.hn||'-'} <b>อายุ:</b> ${p.age||'-'} ปี <b>เพศ:</b> ${p.gender||'-'}</p>
                             <p><b>ประเภท:</b> ${p.patientType||'-'} <b>ADL:</b> ${p.adlScore||'-'} <b>สิทธิ์:</b> ${p.insurance||'-'}</p>
                             <p><b>ญาติผู้ดูแล:</b> ${p.relativeName||'-'} (${p.relativeRelation||'-'}) โทร. ${p.relativePhone||'-'}</p>
                             
-                            <h3 class="font-bold bg-gray-200 p-1 mb-2 mt-4">2. ข้อมูลการแพทย์ & แผนล่วงหน้า</h3>
+                            <h3 class="font-bold bg-amber-100 text-amber-900 p-1 mb-2 mt-4">2. ข้อมูลการแพทย์ & แผนล่วงหน้า</h3>
                             <p><b>Diagnosis:</b> ${p.diagnosis||'-'}</p>
                             <p><b>โรคประจำตัว:</b> ${p.underlyingDiseases||'-'}</p>
                             <p class="mt-2 text-red-600"><b>POLST:</b> ${p.polst||'-'}</p>
@@ -1240,25 +1271,25 @@
                         <!-- PAGE 2 (Page Break) -->
                         <div class="html2pdf__page-break"></div>
                         <div style="padding: 15mm; min-height: 297mm; box-sizing: border-box;">
-                            <h3 class="font-bold bg-gray-200 p-1 mb-2">3. รายการยาปัจจุบัน (Current Meds)</h3>
+                            <h3 class="font-bold bg-amber-100 text-amber-900 p-1 mb-2">3. รายการยาปัจจุบัน (Current Meds)</h3>
                             <ul>
                                 ${p.medicationsList && p.medicationsList.length>0 ? p.medicationsList.map(m=>`<li>- ${m.name} : ${m.dosage} (${m.frequency})</li>`).join('') : '<li>-</li>'}
                             </ul>
                             
-                            <h3 class="font-bold bg-gray-200 p-1 mb-2 mt-4">4. สรุปประวัติ รพ. และ ACP</h3>
+                            <h3 class="font-bold bg-amber-100 text-amber-900 p-1 mb-2 mt-4">4. สรุปประวัติ รพ. และ ACP</h3>
                             <p class="text-[9px] mb-1"><b>ประวัติ รพ. ทับคล้อ:</b> ${p.hospitalRecords && p.hospitalRecords.length > 0 ? p.hospitalRecords.length + ' รายการ' : 'ไม่มี'}</p>
                             <p class="text-[9px]"><b>บันทึกเป้าหมาย ACP:</b> ${p.acpRecords && p.acpRecords.length > 0 ? p.acpRecords.length + ' ครั้ง (รายละเอียดดูในระบบ)' : 'ไม่มีบันทึก'}</p>
 
-                            <h3 class="font-bold bg-gray-200 p-1 mb-2 mt-4">5. บันทึกอาการและ MDT ล่าสุด</h3>
+                            <h3 class="font-bold bg-amber-100 text-amber-900 p-1 mb-2 mt-4">5. บันทึกอาการและ MDT ล่าสุด</h3>
                             <table class="w-full text-[9px] text-left border">
-                                <tr class="bg-gray-100"><th class="border p-1 w-16">วันที่</th><th class="border p-1">Vitals</th><th class="border p-1 w-10">Pain</th><th class="border p-1 w-10">Dys</th><th class="border p-1">MDT Note</th></tr>
+                                <tr class="bg-amber-50 text-amber-900"><th class="border border-amber-200 p-1 w-16">วันที่</th><th class="border border-amber-200 p-1">Vitals</th><th class="border border-amber-200 p-1 w-10">Pain</th><th class="border border-amber-200 p-1 w-10">Dys</th><th class="border border-amber-200 p-1">MDT Note</th></tr>
                                 ${state.dailyRecords.filter(r=>r.patientId===p.id).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0, 10).map(r=>`
                                 <tr>
-                                    <td class="border p-1">${formatDate(r.date).split(' ')[0]}</td>
-                                    <td class="border p-1">BP:${r.bp||'-'} HR:${r.hr||'-'} Temp:${r.temp||'-'}</td>
-                                    <td class="border p-1">${r.pain}</td>
-                                    <td class="border p-1">${r.dyspnea}</td>
-                                    <td class="border p-1">${r.note||'-'}</td>
+                                    <td class="border border-amber-100 p-1">${formatDate(r.date).split(' ')[0]}</td>
+                                    <td class="border border-amber-100 p-1">BP:${r.bp||'-'} HR:${r.hr||'-'} Temp:${r.temp||'-'}</td>
+                                    <td class="border border-amber-100 p-1">${r.pain}</td>
+                                    <td class="border border-amber-100 p-1">${r.dyspnea}</td>
+                                    <td class="border border-amber-100 p-1">${r.note||'-'}</td>
                                 </tr>`).join('')}
                             </table>
                         </div>
@@ -1287,7 +1318,7 @@
             window.editingRxIndex = null;
             window.rxTempList = [];
             
-            document.getElementById('rx_modal_title').innerHTML = '<i class="ph-fill ph-stethoscope"></i> สั่งยา / ปรับยาใหม่ (New Prescription)';
+            document.getElementById('rx_modal_title').innerHTML = '<i class="ph-fill ph-stethoscope text-amber-600 mr-2"></i> สั่งยา / ปรับยาใหม่ (New Prescription)';
             document.getElementById('rx_doctor').value = '';
             document.getElementById('rx_plan').value = '';
             renderRxTempList();
@@ -1304,7 +1335,7 @@
             // ดึงยาปัจจุบันมาเป็นพื้นฐาน
             window.rxTempList = p.medicationsList ? p.medicationsList.map(m => ({medName: m.name, dose: m.dosage, freq: m.frequency})) : [];
             
-            document.getElementById('rx_modal_title').innerHTML = '<i class="ph-fill ph-arrows-clockwise"></i> Remedication (สั่งยาเดิมต่อเนื่อง)';
+            document.getElementById('rx_modal_title').innerHTML = '<i class="ph-fill ph-arrows-clockwise text-amber-600 mr-2"></i> Remedication (สั่งยาเดิมต่อเนื่อง)';
             document.getElementById('rx_doctor').value = '';
             document.getElementById('rx_plan').value = 'Remedication (สั่งจ่ายยาเดิมต่อเนื่อง)';
             renderRxTempList();
@@ -1324,7 +1355,7 @@
             window.editingRxIndex = rxIndex;
             
             window.rxTempList = JSON.parse(JSON.stringify(rx.items));
-            document.getElementById('rx_modal_title').innerHTML = '<i class="ph-fill ph-pencil-simple"></i> แก้ไขใบสั่งยา';
+            document.getElementById('rx_modal_title').innerHTML = '<i class="ph-fill ph-pencil-simple text-amber-600 mr-2"></i> แก้ไขใบสั่งยา';
             document.getElementById('rx_doctor').value = rx.doctor || '';
             document.getElementById('rx_plan').value = rx.plan || '';
             
@@ -1340,14 +1371,14 @@
             const container = document.getElementById('rx_temp_list');
             if(!container) return;
             container.innerHTML = window.rxTempList.map((i, idx) => `
-                <li class="p-2 border-b flex justify-between items-center hover:bg-gray-50 transition">
-                    <span class="font-medium text-purple-900">${i.medName} <span class="text-gray-500 font-normal ml-1">${i.dose} (${i.freq})</span></span>
+                <li class="p-3 border border-amber-100 rounded-lg flex justify-between items-center hover:bg-amber-100/50 bg-white transition shadow-sm">
+                    <span class="font-bold text-amber-900">${i.medName} <span class="text-gray-500 font-medium ml-2 text-xs bg-gray-50 px-2 py-0.5 rounded">${i.dose} (${i.freq})</span></span>
                     <div class="flex gap-1">
-                        <button type="button" onclick="editRxItem(${idx})" class="text-sky-500 hover:text-sky-700 bg-sky-50 p-1.5 rounded" title="แก้ไข"><i class="ph ph-pencil-simple"></i></button>
-                        <button type="button" onclick="removeRxItem(${idx})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="ลบ"><i class="ph ph-trash"></i></button>
+                        <button type="button" onclick="editRxItem(${idx})" class="text-amber-500 hover:text-amber-700 bg-amber-50 p-1.5 rounded-lg" title="แก้ไข"><i class="ph ph-pencil-simple"></i></button>
+                        <button type="button" onclick="removeRxItem(${idx})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-lg" title="ลบ"><i class="ph ph-trash"></i></button>
                     </div>
                 </li>
-            `).join('') || '<li class="text-center text-gray-400 py-3 bg-gray-50">ยังไม่มีรายการยา</li>';
+            `).join('') || '<li class="text-center text-amber-700/50 py-4 bg-amber-50/50 rounded-lg border border-dashed border-amber-200 font-medium">ยังไม่มีรายการยา</li>';
         }
 
         window.addRxItem = function() {
@@ -1511,7 +1542,7 @@
         // --- DAILY RECORD ACTIONS (ADD / EDIT / DELETE) ---
         window.openDailyRecordFormForAdd = function() {
             window.editingRecordId = null;
-            document.getElementById('dr_modal_title').innerText = "เพิ่มบันทึก";
+            document.getElementById('dr_modal_title').innerHTML = "<i class='ph-fill ph-note-pencil text-amber-600 mr-2'></i> เพิ่มบันทึก";
             const now = new Date();
             // local datetime format for input
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -1528,7 +1559,7 @@
             window.editingRecordId = recordId;
             const rec = state.dailyRecords.find(x => x.id.toString() === recordId.toString());
             if(!rec) return;
-            document.getElementById('dr_modal_title').innerText = "แก้ไขบันทึก";
+            document.getElementById('dr_modal_title').innerHTML = "<i class='ph-fill ph-note-pencil text-amber-600 mr-2'></i> แก้ไขบันทึก";
             document.getElementById('dr_date').value = rec.date ? rec.date.slice(0,16) : '';
             document.getElementById('dr_recorder').value = rec.recorderName || '';
             document.getElementById('dr_bp').value = rec.bp==='-'?'':rec.bp; document.getElementById('dr_hr').value = rec.hr==='-'?'':rec.hr; document.getElementById('dr_rr').value = rec.rr==='-'?'':rec.rr; document.getElementById('dr_temp').value = rec.temp==='-'?'':rec.temp; document.getElementById('dr_o2').value = rec.o2==='-'?'':rec.o2;
