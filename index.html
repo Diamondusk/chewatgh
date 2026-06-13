@@ -88,7 +88,7 @@
         <!-- Header -->
         <header class="bg-white shadow-sm px-4 md:px-8 py-4 flex justify-between items-center z-0">
             <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="text-gray-500 hover:text-sky-600 focus:outline-none">
+                <button onclick="toggleSidebar()" class="text-gray-500 hover:text-sky-600 focus:outline-none md:hidden">
                     <i class="ph ph-list text-2xl"></i>
                 </button>
                 <h2 id="page-title" class="text-lg md:text-xl font-semibold text-gray-700 truncate">แดชบอร์ด</h2>
@@ -125,13 +125,19 @@
             patients: [],
             dailyRecords: [],
             selectedPatientId: null,
-            detailTab: 'info', // info, medical, records, pharmacy
+            detailTab: 'info', // info, medical, pharmacy, records
+            pharmaTab: 'pending_pharmacy', // pending_pharmacy, dispensed, received
             filters: { type: 'all', adl: 'all', search: '' }
         };
 
         window.tempMedications = [];
         window.tempBloodTests = [];
         window.editingRecordId = null;
+
+        // Rx Modal State
+        window.rxTempList = [];
+        window.editingRxIndex = null;
+        window.editingRxPatientId = null;
 
         // --- FETCH DATA ---
         async function fetchInitialData() {
@@ -421,6 +427,11 @@
         }
 
         // --- 3. SMART PHARMACY VIEW ---
+        window.setPharmaTab = function(tab) {
+            state.pharmaTab = tab;
+            renderPharmacy(document.getElementById('app-content'));
+        };
+
         function renderPharmacy(container) {
             const activePatients = state.patients.filter(p => p.status !== 'Discharged');
             
@@ -434,54 +445,49 @@
                 }
             });
 
-            // กรองสถานะ
-            const statusFilter = document.getElementById('pharma_filter') ? document.getElementById('pharma_filter').value : 'pending_pharmacy';
-            if (statusFilter !== 'all') {
-                allRx = allRx.filter(item => item.rx.status === statusFilter);
-            }
-            // เรียงวันที่ใหม่ไปเก่า
-            allRx.sort((a,b) => new Date(b.rx.date) - new Date(a.rx.date));
+            // กรองตามแท็บ
+            const filteredRx = allRx.filter(item => item.rx.status === state.pharmaTab);
+            filteredRx.sort((a,b) => new Date(b.rx.date) - new Date(a.rx.date));
 
             container.innerHTML = `
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full">
-                    <div class="p-4 border-b border-purple-100 bg-purple-50 flex justify-between items-center rounded-t-2xl">
-                        <div class="flex items-center gap-2 text-purple-800 font-bold">
-                            <i class="ph-fill ph-pill text-2xl"></i> ศูนย์จ่ายยาและรับยา
+                    <div class="p-4 border-b border-purple-100 bg-purple-50 rounded-t-2xl">
+                        <div class="flex items-center gap-2 text-purple-800 font-bold mb-4">
+                            <i class="ph-fill ph-pill text-2xl"></i> ศูนย์จ่ายยาและรับยาอัจฉริยะ
                         </div>
-                        <select id="pharma_filter" onchange="renderPharmacy(document.getElementById('app-content'))" class="border border-purple-200 rounded-lg py-1.5 px-3 text-sm focus:ring-purple-500 text-purple-700 bg-white">
-                            <option value="pending_pharmacy" ${statusFilter==='pending_pharmacy'?'selected':''}>รอเภสัชกรจ่ายยา 🟡</option>
-                            <option value="dispensed" ${statusFilter==='dispensed'?'selected':''}>รอวอร์ดรับยา 🔵</option>
-                            <option value="received" ${statusFilter==='received'?'selected':''}>รับยาแล้ว (ประวัติ) 🟢</option>
-                            <option value="all" ${statusFilter==='all'?'selected':''}>ดูทั้งหมด</option>
-                        </select>
+                        
+                        <!-- Tabs -->
+                        <div class="flex overflow-x-auto gap-2 md:gap-4 hide-scrollbar">
+                            <button onclick="setPharmaTab('pending_pharmacy')" class="pb-2 px-1 text-sm whitespace-nowrap transition-colors ${state.pharmaTab==='pending_pharmacy' ? 'border-b-2 border-amber-500 text-amber-700 font-bold' : 'text-gray-500 hover:text-gray-700'}">แพทย์สั่งจ่ายยาแล้ว 🟡</button>
+                            <button onclick="setPharmaTab('dispensed')" class="pb-2 px-1 text-sm whitespace-nowrap transition-colors ${state.pharmaTab==='dispensed' ? 'border-b-2 border-blue-500 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-700'}">เภสัชกรจ่ายยาแล้ว 🔵</button>
+                            <button onclick="setPharmaTab('received')" class="pb-2 px-1 text-sm whitespace-nowrap transition-colors ${state.pharmaTab==='received' ? 'border-b-2 border-green-500 text-green-700 font-bold' : 'text-gray-500 hover:text-gray-700'}">เจ้าหน้าที่รับยาแล้ว 🟢</button>
+                        </div>
                     </div>
+                    
                     <div class="p-4 flex-1 overflow-y-auto space-y-4">
-                        ${allRx.length === 0 ? '<div class="text-center text-gray-400 py-10">ไม่มีรายการใบสั่งยาในสถานะที่เลือก</div>' : ''}
-                        ${allRx.map(item => {
+                        ${filteredRx.length === 0 ? '<div class="text-center text-gray-400 py-10">ไม่มีรายการใบสั่งยาในสถานะนี้</div>' : ''}
+                        ${filteredRx.map(item => {
                             const { patient, rx, rxIndex } = item;
                             const hasAllergy = patient.allergies && patient.allergies.trim() !== '' && patient.allergies.trim() !== '-';
                             
-                            let statusUI = '';
                             let actionBtn = '';
-
                             if(rx.status === 'pending_pharmacy') {
-                                statusUI = `<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-[10px] font-bold">🟡 รอจ่ายยา</span>`;
-                                actionBtn = `<button onclick="updateRxStatus('${patient.id}', ${rxIndex}, 'dispensed')" class="bg-purple-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-purple-700">เภสัชกร: จ่ายยา</button>`;
+                                actionBtn = `<button onclick="updateRxStatus('${patient.id}', '${rx.id}', 'dispensed')" class="bg-purple-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-purple-700 w-full md:w-auto">รับเรื่องจ่ายยา (เภสัชกร)</button>`;
                             } else if (rx.status === 'dispensed') {
-                                statusUI = `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-[10px] font-bold">🔵 จ่ายแล้ว/รอรับ</span>`;
-                                actionBtn = `<button onclick="updateRxStatus('${patient.id}', ${rxIndex}, 'received')" class="bg-emerald-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-emerald-700">เจ้าหน้าที่: ยืนยันรับยา</button>`;
-                            } else {
-                                statusUI = `<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-[10px] font-bold">🟢 รับยาเรียบร้อย</span>`;
+                                actionBtn = `<button onclick="updateRxStatus('${patient.id}', '${rx.id}', 'received')" class="bg-emerald-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-emerald-700 w-full md:w-auto">ยืนยันรับยา (เจ้าหน้าที่)</button>`;
                             }
 
                             return `
-                                <div class="border ${hasAllergy ? 'border-red-300' : 'border-gray-200'} rounded-xl p-4 bg-white shadow-sm flex flex-col md:flex-row gap-4">
+                                <div class="border ${hasAllergy ? 'border-red-300' : 'border-gray-200'} rounded-xl p-4 bg-white shadow-sm flex flex-col md:flex-row gap-4 relative">
+                                    <div class="absolute top-4 right-4 flex gap-2">
+                                        <button onclick="openEditRxModal('${patient.id}', '${rx.id}')" class="text-gray-400 hover:text-sky-600 text-xs font-medium"><i class="ph ph-pencil-simple"></i> แก้ไข</button>
+                                    </div>
+
                                     <div class="md:w-1/3 border-b md:border-b-0 md:border-r border-gray-100 pb-3 md:pb-0 md:pr-4">
-                                        <div class="flex justify-between items-start mb-1">
+                                        <div class="flex justify-between items-start mb-1 pr-12">
                                             <h4 class="font-bold text-gray-800 text-sm">${patient.name} (HN: ${patient.hn})</h4>
-                                            ${statusUI}
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mb-2"><i class="ph ph-clock"></i> สั่งเมื่อ: ${formatDate(rx.date)} โดย นพ./พญ. ${rx.doctor}</p>
+                                        <p class="text-[10px] text-gray-500 mb-2"><i class="ph ph-clock"></i> สั่งเมื่อ: ${formatDate(rx.date)}<br>โดย: แพทย์ ${rx.doctor}</p>
                                         ${hasAllergy ? `<div class="bg-red-50 text-red-700 text-xs p-2 rounded border border-red-200 allergy-alert"><b>⚠️ แพ้ยา:</b> ${patient.allergies}</div>` : ''}
                                     </div>
                                     <div class="md:w-2/3 flex flex-col justify-between">
@@ -491,9 +497,14 @@
                                                 ${rx.items.map(m => `<li>• <b>${m.medName}</b> - ${m.dose} (${m.freq})</li>`).join('')}
                                             </ul>
                                             ${rx.plan ? `<div class="text-[11px] bg-gray-50 p-2 rounded text-gray-600"><b>แผนการรักษา:</b> ${rx.plan}</div>` : ''}
+                                            
+                                            <div class="mt-2 text-[10px] text-gray-400 flex gap-4">
+                                                ${rx.pharmacist ? `<span><b>ผู้จ่ายยา:</b> ${rx.pharmacist}</span>` : ''}
+                                                ${rx.receiver ? `<span><b>ผู้รับยา:</b> ${rx.receiver}</span>` : ''}
+                                            </div>
                                         </div>
-                                        <div class="mt-3 flex justify-end gap-2">
-                                            <button onclick="navigate('patient-detail', {patientId: '${patient.id}', tab: 'pharmacy'})" class="text-sky-600 hover:underline text-xs font-medium px-3 py-1">ดูประวัติคนไข้</button>
+                                        <div class="mt-4 flex flex-wrap justify-end gap-2">
+                                            <button onclick="navigate('patient-detail', {patientId: '${patient.id}', tab: 'pharmacy'})" class="text-sky-600 border border-sky-200 hover:bg-sky-50 rounded text-xs font-medium px-3 py-1.5 w-full md:w-auto text-center">ดูประวัติคนไข้</button>
                                             ${actionBtn}
                                         </div>
                                     </div>
@@ -505,11 +516,13 @@
             `;
         }
 
-        window.updateRxStatus = async function(patientId, rxIndex, newStatus) {
+        window.updateRxStatus = async function(patientId, rxId, newStatus) {
             const p = state.patients.find(x => x.id === patientId);
-            if(!p || !p.prescriptions || !p.prescriptions[rxIndex]) return;
+            if(!p || !p.prescriptions) return;
+            const rxIndex = p.prescriptions.findIndex(r => r.id === rxId);
+            if(rxIndex === -1) return;
 
-            let name = prompt(`กรุณากรอกชื่อผู้${newStatus === 'dispensed' ? 'จ่ายยา (เภสัชกร)' : 'รับยา (พยาบาล/ญาติ)'}:`);
+            let name = prompt(`กรุณากรอกชื่อ${newStatus === 'dispensed' ? 'ผู้จ่ายยา (เภสัชกร)' : 'เจ้าหน้าที่ผู้รับยา'}:`);
             if(name === null) return; // cancelled
             if(name.trim() === '') name = 'ไม่ระบุชื่อ';
 
@@ -525,7 +538,7 @@
             try {
                 const { error } = await supabaseClient.from('patients').update({ prescriptions: p.prescriptions }).eq('id', patientId);
                 if(error) throw error;
-                fetchInitialData();
+                fetchInitialData(); // Auto re-renders
             } catch (e) {
                 alert('อัปเดตสถานะล้มเหลว: ' + e.message);
             }
@@ -827,11 +840,16 @@
                         </div>
 
                         <!-- สั่งยา -->
-                        <div class="flex justify-between items-end border-b pb-2">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b pb-2 gap-2">
                             <h4 class="font-bold text-purple-800 text-lg">ประวัติใบสั่งยา (Prescriptions)</h4>
-                            <button onclick="openPrescriptionModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-purple-700 text-sm">
-                                <i class="ph ph-plus"></i> สั่งยา / ปรับยา (Doctor)
-                            </button>
+                            <div class="flex gap-2 w-full md:w-auto">
+                                <button onclick="openRemedicationModal('${p.id}')" class="flex-1 md:flex-none bg-teal-600 text-white px-3 py-2 rounded-lg font-bold shadow hover:bg-teal-700 text-xs">
+                                    <i class="ph ph-arrows-clockwise"></i> Remedication (สั่งยาเดิม)
+                                </button>
+                                <button onclick="openPrescriptionModal('${p.id}')" class="flex-1 md:flex-none bg-purple-600 text-white px-3 py-2 rounded-lg font-bold shadow hover:bg-purple-700 text-xs">
+                                    <i class="ph ph-plus"></i> สั่งยาใหม่
+                                </button>
+                            </div>
                         </div>
 
                         <!-- รายการประวัติสั่งยา -->
@@ -842,31 +860,33 @@
 
                                 let sBadge = '', action = '';
                                 if(rx.status === 'pending_pharmacy') {
-                                    sBadge = '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">รอจ่ายยา</span>';
-                                    action = `<button onclick="updateRxStatus('${p.id}', ${originalIdx}, 'dispensed')" class="mt-2 w-full bg-purple-600 text-white py-1.5 rounded text-xs font-bold">จ่ายยา (Pharmacist)</button>`;
+                                    sBadge = '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">แพทย์สั่งจ่ายยาแล้ว 🟡</span>';
+                                    action = `<button onclick="updateRxStatus('${p.id}', '${rx.id}', 'dispensed')" class="mt-2 w-full bg-purple-600 text-white py-1.5 rounded text-xs font-bold">รับเรื่องจ่ายยา (Pharmacist)</button>`;
                                 } else if (rx.status === 'dispensed') {
-                                    sBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">รอรับยา</span>';
-                                    action = `<button onclick="updateRxStatus('${p.id}', ${originalIdx}, 'received')" class="mt-2 w-full bg-emerald-600 text-white py-1.5 rounded text-xs font-bold">รับยา (Caregiver)</button>`;
+                                    sBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">เภสัชกรจ่ายยาแล้ว 🔵</span>';
+                                    action = `<button onclick="updateRxStatus('${p.id}', '${rx.id}', 'received')" class="mt-2 w-full bg-emerald-600 text-white py-1.5 rounded text-xs font-bold">เจ้าหน้าที่รับยาแล้ว (Caregiver)</button>`;
                                 } else {
-                                    sBadge = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">รับยาแล้ว</span>';
+                                    sBadge = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">เจ้าหน้าที่รับยาแล้ว 🟢</span>';
                                 }
 
                                 return `
-                                <div class="border rounded-xl p-4 bg-white shadow-sm flex flex-col md:flex-row gap-4">
+                                <div class="border rounded-xl p-4 bg-white shadow-sm flex flex-col md:flex-row gap-4 relative">
+                                    <button onclick="openEditRxModal('${p.id}', '${rx.id}')" class="absolute top-4 right-4 text-gray-400 hover:text-sky-600 text-xs font-medium"><i class="ph ph-pencil-simple"></i> แก้ไข</button>
+                                    
                                     <div class="md:w-1/4 border-b md:border-b-0 md:border-r pb-2 md:pr-4">
-                                        <div class="flex justify-between items-center mb-2"><span class="font-bold text-sm">วันที่สั่ง</span> ${sBadge}</div>
-                                        <p class="text-xs text-gray-500">${formatDate(rx.date)}</p>
-                                        <p class="text-[10px] text-gray-400 mt-1">แพทย์: ${rx.doctor}</p>
-                                        ${rx.pharmacist ? `<p class="text-[10px] text-purple-600 mt-1">ผู้จ่าย: ${rx.pharmacist}</p>` : ''}
-                                        ${rx.receiver ? `<p class="text-[10px] text-emerald-600 mt-1">ผู้รับ: ${rx.receiver}</p>` : ''}
+                                        <div class="flex justify-between items-center mb-2 pr-10"><span class="font-bold text-sm">สถานะ:</span> ${sBadge}</div>
+                                        <p class="text-xs text-gray-500 mt-2">${formatDate(rx.date)}</p>
+                                        <p class="text-[10px] text-gray-500 mt-1"><b>แพทย์:</b> ${rx.doctor}</p>
+                                        ${rx.pharmacist ? `<p class="text-[10px] text-purple-600 mt-1"><b>ผู้จ่าย:</b> ${rx.pharmacist}</p>` : ''}
+                                        ${rx.receiver ? `<p class="text-[10px] text-emerald-600 mt-1"><b>ผู้รับ:</b> ${rx.receiver}</p>` : ''}
                                         ${action}
                                     </div>
-                                    <div class="md:w-3/4 text-sm">
+                                    <div class="md:w-3/4 text-sm mt-2 md:mt-0">
                                         <h5 class="font-bold text-gray-700 mb-1 border-b pb-1">รายการยา</h5>
                                         <ul class="mb-3 space-y-1">
                                             ${rx.items.map(i => `<li>- <span class="font-semibold">${i.medName}</span> : ${i.dose} (${i.freq})</li>`).join('')}
                                         </ul>
-                                        ${rx.plan ? `<div class="bg-gray-50 p-2 text-xs rounded text-gray-700"><b>แผนการพยาบาล/เหตุผลปรับยา:</b><br>${rx.plan}</div>` : ''}
+                                        ${rx.plan ? `<div class="bg-gray-50 p-2 text-xs rounded text-gray-700"><b>แผนการรักษา:</b><br>${rx.plan}</div>` : ''}
                                     </div>
                                 </div>
                                 `
@@ -874,17 +894,17 @@
                         </div>
                     </div>
 
-                    <!-- Modal สั่งยา -->
+                    <!-- Modal สั่งยา/แก้ไขยา -->
                     <div id="rxModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
                         <div class="bg-white rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-                            <h3 class="text-lg font-bold text-purple-800 border-b pb-2 mb-4"><i class="ph-fill ph-stethoscope"></i> สั่งยา / ปรับยา (Prescription)</h3>
+                            <h3 id="rx_modal_title" class="text-lg font-bold text-purple-800 border-b pb-2 mb-4"><i class="ph-fill ph-stethoscope"></i> สั่งยา / ปรับยา (Prescription)</h3>
                             ${hasAllergy ? `<div class="bg-red-50 text-red-700 p-3 rounded mb-4 text-sm font-bold border border-red-200">⚠️ ผู้ป่วยแพ้ยา: ${p.allergies}</div>` : ''}
                             
-                            <form onsubmit="handleSaveRx(event, '${p.id}')" class="space-y-4">
-                                <div><label class="block text-xs mb-1">ชื่อแพทย์ผู้สั่ง</label><input type="text" id="rx_doctor" class="w-full border p-2 rounded text-sm" required></div>
+                            <form onsubmit="handleSaveRx(event)" class="space-y-4">
+                                <div><label class="block text-xs mb-1">ชื่อแพทย์ผู้สั่ง (หรือผู้แก้ไข)</label><input type="text" id="rx_doctor" class="w-full border p-2 rounded text-sm" required></div>
                                 
                                 <div class="border rounded p-3 bg-gray-50">
-                                    <label class="block text-xs font-bold text-sky-800 mb-2">เพิ่มรายการยา</label>
+                                    <label class="block text-xs font-bold text-sky-800 mb-2">รายการยา</label>
                                     <div class="flex flex-col gap-2 mb-2">
                                         <input type="text" id="rx_medName" placeholder="ชื่อยา" class="w-full border p-1.5 rounded text-sm">
                                         <div class="flex gap-2">
@@ -892,15 +912,15 @@
                                             <input type="text" id="rx_freq" placeholder="วิธีใช้ (Freq)" class="w-1/2 border p-1.5 rounded text-sm">
                                         </div>
                                     </div>
-                                    <button type="button" onclick="addRxItem()" class="w-full bg-sky-200 text-sky-800 py-1.5 rounded text-xs font-bold">เพิ่มลงในใบสั่ง</button>
+                                    <button type="button" onclick="addRxItem()" class="w-full bg-sky-200 text-sky-800 py-1.5 rounded text-xs font-bold hover:bg-sky-300">เพิ่มลงในใบสั่ง</button>
                                     <ul id="rx_temp_list" class="mt-2 space-y-1 text-xs text-gray-700 bg-white rounded"></ul>
                                 </div>
 
-                                <div><label class="block text-xs mb-1">แผนการรักษา/เหตุผลที่เปลี่ยนยา</label><textarea id="rx_plan" class="w-full border p-2 rounded h-16 text-sm"></textarea></div>
+                                <div><label class="block text-xs mb-1">แผนการรักษา/เหตุผล</label><textarea id="rx_plan" class="w-full border p-2 rounded h-16 text-sm"></textarea></div>
                                 
                                 <div class="flex justify-end gap-2 pt-2">
                                     <button type="button" onclick="closePrescriptionModal()" class="px-4 py-2 bg-gray-200 rounded text-sm font-medium">ยกเลิก</button>
-                                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded text-sm font-bold">บันทึกส่งห้องยา</button>
+                                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded text-sm font-bold">บันทึกข้อมูลใบสั่งยา</button>
                                 </div>
                             </form>
                         </div>
@@ -1009,13 +1029,46 @@
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full md:w-auto justify-end">
-                            <button onclick="navigate('add-patient', {patientId: '${p.id}'})" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium"><i class="ph ph-pencil-simple"></i> แก้ไข</button>
+                            <button onclick="navigate('add-patient', {patientId: '${p.id}'})" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium"><i class="ph ph-pencil-simple"></i> แก้ไขข้อมูล</button>
                             <button onclick="exportToPDF('${p.id}')" class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-xs font-medium"><i class="ph ph-file-pdf"></i> ดาวน์โหลด PDF</button>
                         </div>
                     </div>
                     ${hasAllergy ? `<div class="allergy-alert text-red-800 font-bold p-2 text-xs rounded mb-4 text-center shadow-sm border border-red-300">⚠️ ผู้ป่วยมีประวัติแพ้ยา: ${p.allergies}</div>` : ''}
                     ${tabHeader}
                     <div class="min-h-[300px] mt-4">${tabContent}</div>
+                </div>
+
+                <!-- Discharge Modal -->
+                <div id="dischargeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl w-full max-w-md p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">จำหน่ายผู้ป่วย (Discharge)</h3>
+                            <button onclick="closeDischargeModal()" class="text-gray-400 hover:text-gray-600"><i class="ph ph-x text-xl"></i></button>
+                        </div>
+                        <form onsubmit="handleDischarge(event, '${p.id}')" class="space-y-4">
+                            <div>
+                                <label class="block text-sm mb-1">วันที่ Discharge</label>
+                                <input type="date" id="dis_date" class="w-full border rounded p-2" required value="${new Date().toISOString().split('T')[0]}">
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1">สถานะเมื่อ Discharge</label>
+                                <select id="dis_reason" class="w-full border rounded p-2" required>
+                                    <option value="Discharged Home (จำหน่ายกลับบ้าน)">Discharged Home (จำหน่ายกลับบ้าน)</option>
+                                    <option value="Transferred (ส่งต่อโรงพยาบาล)">Transferred (ส่งต่อโรงพยาบาล)</option>
+                                    <option value="Deceased (เสียชีวิตอย่างสงบ)">Deceased (เสียชีวิตอย่างสงบ)</option>
+                                    <option value="Other (อื่น ๆ)">Other (อื่น ๆ)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1">บันทึกรายละเอียดเพิ่มเติม</label>
+                                <textarea id="dis_note" class="w-full border rounded p-2 h-20" placeholder="ระบุเหตุผล เช่น สิ้นสุดการดูแลรักษาวาระสุดท้าย, นัดติดตามอาการ..."></textarea>
+                            </div>
+                            <div class="flex justify-end pt-3 gap-2">
+                                <button type="button" onclick="closeDischargeModal()" class="bg-gray-100 px-4 py-2 rounded text-sm">ยกเลิก</button>
+                                <button type="submit" class="bg-rose-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-rose-700">จำหน่ายผู้ป่วย</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- PDF Multi-page Template -->
@@ -1076,51 +1129,120 @@
             `;
         }
 
-        // --- PHARMACY RX ACTIONS ---
-        window.rxTempList = [];
-        window.openPrescriptionModal = function() {
+        // --- PHARMACY RX ACTIONS (ADD/EDIT/REMEDICATION) ---
+        window.openPrescriptionModal = function(patientId) {
+            window.editingRxPatientId = patientId;
+            window.editingRxIndex = null;
             window.rxTempList = [];
-            document.getElementById('rx_temp_list').innerHTML = '';
+            
+            document.getElementById('rx_modal_title').innerHTML = '<i class="ph-fill ph-stethoscope"></i> สั่งยา / ปรับยาใหม่ (New Prescription)';
             document.getElementById('rx_doctor').value = '';
             document.getElementById('rx_plan').value = '';
+            renderRxTempList();
             document.getElementById('rxModal').classList.remove('hidden');
         };
+
+        window.openRemedicationModal = function(patientId) {
+            const p = state.patients.find(x => x.id === patientId);
+            if(!p) return;
+            
+            window.editingRxPatientId = patientId;
+            window.editingRxIndex = null; // ถือเป็นการสร้างใบสั่งยาใหม่
+            
+            // ดึงยาปัจจุบันมาเป็นพื้นฐาน
+            window.rxTempList = p.medicationsList ? p.medicationsList.map(m => ({medName: m.name, dose: m.dosage, freq: m.frequency})) : [];
+            
+            document.getElementById('rx_modal_title').innerHTML = '<i class="ph-fill ph-arrows-clockwise"></i> Remedication (สั่งยาเดิมต่อเนื่อง)';
+            document.getElementById('rx_doctor').value = '';
+            document.getElementById('rx_plan').value = 'Remedication (สั่งจ่ายยาเดิมต่อเนื่อง)';
+            renderRxTempList();
+            document.getElementById('rxModal').classList.remove('hidden');
+        };
+
+        window.openEditRxModal = function(patientId, rxId) {
+            const p = state.patients.find(x => x.id === patientId);
+            if(!p || !p.prescriptions) return;
+            
+            const rxIndex = p.prescriptions.findIndex(r => r.id === rxId);
+            if(rxIndex === -1) return;
+
+            const rx = p.prescriptions[rxIndex];
+            
+            window.editingRxPatientId = patientId;
+            window.editingRxIndex = rxIndex;
+            
+            window.rxTempList = JSON.parse(JSON.stringify(rx.items));
+            document.getElementById('rx_modal_title').innerHTML = '<i class="ph-fill ph-pencil-simple"></i> แก้ไขใบสั่งยา';
+            document.getElementById('rx_doctor').value = rx.doctor || '';
+            document.getElementById('rx_plan').value = rx.plan || '';
+            
+            renderRxTempList();
+            document.getElementById('rxModal').classList.remove('hidden');
+        };
+
         window.closePrescriptionModal = function() {
             document.getElementById('rxModal').classList.add('hidden');
         };
+
+        window.renderRxTempList = function() {
+            const container = document.getElementById('rx_temp_list');
+            if(!container) return;
+            container.innerHTML = window.rxTempList.map((i, idx) => `
+                <li class="p-2 border-b flex justify-between items-center bg-gray-50">
+                    <span class="font-medium">${i.medName} <span class="text-gray-500 font-normal">- ${i.dose} (${i.freq})</span></span>
+                    <button type="button" onclick="removeRxItem(${idx})" class="text-red-500 hover:text-red-700 p-1"><i class="ph ph-trash"></i></button>
+                </li>
+            `).join('') || '<li class="text-center text-gray-400 py-2">ยังไม่มีรายการยา</li>';
+        }
+
         window.addRxItem = function() {
-            const mName = document.getElementById('rx_medName').value;
-            const mDose = document.getElementById('rx_dose').value;
-            const mFreq = document.getElementById('rx_freq').value;
+            const mName = document.getElementById('rx_medName').value.trim();
+            const mDose = document.getElementById('rx_dose').value.trim();
+            const mFreq = document.getElementById('rx_freq').value.trim();
             if(!mName) return;
             window.rxTempList.push({ medName: mName, dose: mDose, freq: mFreq });
             document.getElementById('rx_medName').value=''; document.getElementById('rx_dose').value=''; document.getElementById('rx_freq').value='';
-            document.getElementById('rx_temp_list').innerHTML = window.rxTempList.map(i=>`<li class="p-1 border-b">${i.medName} - ${i.dose} (${i.freq})</li>`).join('');
+            renderRxTempList();
         };
-        window.handleSaveRx = async function(e, patientId) {
+
+        window.removeRxItem = function(idx) {
+            window.rxTempList.splice(idx, 1);
+            renderRxTempList();
+        }
+
+        window.handleSaveRx = async function(e) {
             e.preventDefault();
             if(window.rxTempList.length === 0) { alert('กรุณาเพิ่มยาอย่างน้อย 1 รายการ'); return; }
+            
+            const patientId = window.editingRxPatientId;
             const docName = document.getElementById('rx_doctor').value;
             const plan = document.getElementById('rx_plan').value;
             
             const p = state.patients.find(x=>x.id===patientId);
             const rxList = p.prescriptions || [];
             
-            // สร้าง ID สุ่มสำหรับใบสั่งยา
-            const rxId = 'RX' + Date.now();
-            rxList.push({
-                id: rxId, date: new Date().toISOString(), doctor: docName,
-                items: window.rxTempList, plan: plan,
-                status: 'pending_pharmacy', pharmacist: '', receiver: ''
-            });
+            if (window.editingRxIndex !== null) {
+                // อัปเดตใบสั่งยาเดิม
+                rxList[window.editingRxIndex].doctor = docName;
+                rxList[window.editingRxIndex].items = window.rxTempList;
+                rxList[window.editingRxIndex].plan = plan;
+            } else {
+                // สร้างใหม่
+                const rxId = 'RX' + Date.now();
+                rxList.push({
+                    id: rxId, date: new Date().toISOString(), doctor: docName,
+                    items: window.rxTempList, plan: plan,
+                    status: 'pending_pharmacy', pharmacist: '', receiver: ''
+                });
+            }
 
-            // อัปเดตรายการยาปัจจุบันของผู้ป่วยอัตโนมัติ (อิงตามใบสั่งล่าสุด)
+            // นำรายการในใบสั่งยา (ใบที่แก้ล่าสุด/สร้างใหม่) ไปอัปเดตเป็นยาปัจจุบัน
             const newMedsList = window.rxTempList.map(i => ({ name: i.medName, dosage: i.dose, frequency: i.freq }));
 
             try {
                 const { error } = await supabaseClient.from('patients').update({ prescriptions: rxList, medicationsList: newMedsList }).eq('id', patientId);
                 if(error) throw error;
-                alert('ส่งใบสั่งยาไปห้องยาสำเร็จ!');
+                alert('บันทึกข้อมูลใบสั่งยาเรียบร้อย!');
                 closePrescriptionModal();
                 await fetchInitialData();
             } catch(err) { alert('Error: ' + err.message); }
@@ -1222,6 +1344,66 @@
                 'HN': p.hn, 'ชื่อ': p.name, 'อายุ': p.age, 'แพ้ยา': p.allergies, 'ประเภท': p.patientType
             })));
             XLSX.writeFile(XLSX.utils.book_append_sheet(XLSX.utils.book_new(), ws, "Patients"), "Patients.xlsx");
+        };
+
+        // --- DISCHARGE MODAL ACTION ---
+        window.openDischargeModal = function() {
+            document.getElementById('dischargeModal').classList.remove('hidden');
+        };
+        window.closeDischargeModal = function() {
+            document.getElementById('dischargeModal').classList.add('hidden');
+        };
+        window.handleDischarge = async function(e, patientId) {
+            e.preventDefault();
+            const date = document.getElementById('dis_date').value;
+            const reason = document.getElementById('dis_reason').value;
+            const note = document.getElementById('dis_note').value;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('patients')
+                    .update({
+                        status: 'Discharged',
+                        dischargeDate: date,
+                        dischargeReason: reason,
+                        dischargeNote: note
+                    })
+                    .eq('id', patientId);
+
+                if (error) throw error;
+
+                alert('จำหน่ายผู้ป่วยออกจากสถานชีวาภิบาลเรียบร้อยแล้ว');
+                closeDischargeModal();
+                await fetchInitialData();
+                navigate('discharged');
+            } catch (error) {
+                console.error('Error discharging:', error);
+                alert('เกิดข้อผิดพลาดในการจำหน่ายผู้ป่วย: ' + error.message);
+            }
+        };
+
+        window.handleReAdmit = async function(patientId) {
+            if(!confirm('คุณต้องการรับผู้ป่วยรายนี้กลับเข้ามาดูแลรักษารอบใหม่ใช่หรือไม่?')) return;
+            try {
+                const { error } = await supabaseClient
+                    .from('patients')
+                    .update({
+                        status: 'Active',
+                        dischargeDate: null,
+                        dischargeReason: null,
+                        dischargeNote: null
+                    })
+                    .eq('id', patientId);
+
+                if (error) throw error;
+
+                alert('รับผู้ป่วยรายเดิมกลับเข้ามาดูแลอีกครั้งเรียบร้อย');
+                await fetchInitialData();
+                navigate('patients');
+            } catch (error) {
+                console.error('Error re-admit:', error);
+                alert('เกิดข้อผิดพลาดในการรับดูแลใหม่: ' + error.message);
+            }
         };
 
         // --- INIT ---
