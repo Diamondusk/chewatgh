@@ -125,7 +125,7 @@
             patients: [],
             dailyRecords: [],
             selectedPatientId: null,
-            detailTab: 'info', // info, medical, pharmacy, records
+            detailTab: 'info', // info, hospital, medical, acp, pharmacy, records
             pharmaTab: 'pending_pharmacy', // pending_pharmacy, dispensed, received
             filters: { type: 'all', adl: 'all', search: '' }
         };
@@ -138,6 +138,10 @@
         window.rxTempList = [];
         window.editingRxIndex = null;
         window.editingRxPatientId = null;
+
+        // ACP Template Labels
+        const acpGoals = ['CPR', 'ETT', 'Inotrope', 'Bloodtransfusion', 'Antibiotic', 'NGinsertion', 'IVaccess', 'Palliativesurgery'];
+        const acpLabels = ['No CPR', 'No ETT', 'No inotrope', 'No blood transfusion', 'No Antibiotic', 'No NG insertion', 'No IV access', 'No Palliative surgery'];
 
         // --- FETCH DATA ---
         async function fetchInitialData() {
@@ -249,7 +253,6 @@
             const imc = activePatients.filter(p => p.patientType && p.patientType.includes('Intermediate')).length;
             const eld = total - pal - imc;
 
-            // นับใบสั่งยาที่ค้างจ่าย (Pending Pharmacy)
             let pendingRx = 0;
             activePatients.forEach(p => {
                 if(p.prescriptions) {
@@ -611,7 +614,7 @@
                                 </div>
                             </div>
                             <div class="p-4 border border-gray-100 rounded-xl bg-gray-50">
-                                <h4 class="font-bold text-sky-800 mb-3 text-sm">ประวัติ รพ. / ACP / POLST</h4>
+                                <h4 class="font-bold text-sky-800 mb-3 text-sm">ประวัติพื้นฐาน / POLST</h4>
                                 <div class="space-y-3 text-xs">
                                     <div><label class="mb-1 block">ประวัติแอดมิท รพ.</label><input type="text" id="f_hospitalHistory" value="${p.hospitalHistory || ''}" class="w-full p-2 border rounded"></div>
                                     <div><label class="mb-1 block">สถานะกู้ชีพ (POLST)</label>
@@ -620,7 +623,7 @@
                                             <option value="Full Code" ${p.polst?.includes('Full Code')?'selected':''}>Full Code (กู้ชีพเต็มที่)</option>
                                         </select>
                                     </div>
-                                    <div><label class="mb-1 block">ACP</label><input type="text" id="f_acp" value="${p.acp || ''}" class="w-full p-2 border rounded"></div>
+                                    <div><label class="mb-1 block">ACP เบื้องต้น</label><input type="text" id="f_acp" value="${p.acp || ''}" class="w-full p-2 border rounded"></div>
                                 </div>
                             </div>
                         </section>
@@ -717,7 +720,9 @@
                 bloodTestsList: [...window.tempBloodTests],
                 status: oldP.status || 'Active',
                 medicationsList: oldP.medicationsList || [], // Preserve meds
-                prescriptions: oldP.prescriptions || [] // Preserve prescriptions
+                prescriptions: oldP.prescriptions || [], // Preserve prescriptions
+                hospitalRecords: oldP.hospitalRecords || [], // Preserve hospital history
+                acpRecords: oldP.acpRecords || [] // Preserve ACP history
             };
 
             try {
@@ -741,7 +746,9 @@
             // TABS
             const tabs = [
                 { id: 'info', label: 'ข้อมูลทั่วไป' },
-                { id: 'medical', label: 'ผลแลป/แผน' },
+                { id: 'hospital', label: 'ประวัติ รพ.' },
+                { id: 'medical', label: 'ผลแลป' },
+                { id: 'acp', label: 'ACP / เป้าหมาย' },
                 { id: 'pharmacy', label: 'สั่งยา/เภสัชกร' },
                 { id: 'records', label: 'บันทึกอาการ' }
             ];
@@ -770,20 +777,91 @@
                             <div class="flex justify-between text-gray-500"><span>เกี่ยวข้อง:</span> <span class="text-gray-900">${p.relativeRelation||'-'}</span></div>
                             <div class="flex justify-between text-gray-500"><span>เบอร์:</span> <span class="text-sky-600 font-medium">${p.relativePhone||'-'}</span></div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-xl border">
-                            <h4 class="font-bold text-sky-800 mb-2">ประวัติ รพ. / Diagnosis</h4>
+                        <div class="bg-gray-50 p-4 rounded-xl border md:col-span-2">
+                            <h4 class="font-bold text-sky-800 mb-2">Diagnosis พื้นฐาน</h4>
                             <p class="text-xs text-gray-700 whitespace-pre-wrap mb-2"><b>Dx:</b> ${p.diagnosis||'-'}</p>
                             <p class="text-xs text-gray-700 whitespace-pre-wrap mb-2"><b>โรคประจำตัว:</b> ${p.underlyingDiseases||'-'}</p>
-                            <p class="text-xs text-gray-700 whitespace-pre-wrap"><b>ประวัติแอดมิท:</b> ${p.hospitalHistory||'-'}</p>
-                        </div>
-                        <div class="bg-amber-50 p-4 rounded-xl border border-amber-200">
-                            <h4 class="font-bold text-amber-900 mb-2">Advance Care Plan / POLST</h4>
-                            <p class="text-xs text-amber-800 font-bold mb-1">POLST: ${p.polst||'-'}</p>
-                            <p class="text-xs text-amber-800 whitespace-pre-wrap"><b>ACP:</b> ${p.acp||'-'}</p>
                         </div>
                     </div>
                 `;
             } 
+            else if(state.detailTab === 'hospital') {
+                const hospRecords = p.hospitalRecords || [];
+                tabContent = `
+                    <div class="mb-4 flex justify-between items-center">
+                        <h4 class="font-bold text-sky-800 text-lg">ประวัติการรักษาในโรงพยาบาลทับคล้อ</h4>
+                        <button onclick="openHospitalModal()" class="px-3 py-1.5 bg-sky-600 text-white text-xs rounded-lg hover:bg-sky-700 shadow font-medium"><i class="ph ph-plus"></i> เพิ่มประวัติใหม่</button>
+                    </div>
+                    <div class="space-y-4">
+                        ${hospRecords.length > 0 ? 
+                        hospRecords.sort((a,b) => new Date(b.date) - new Date(a.date)).map(hr => `
+                            <div class="border border-sky-100 rounded-xl p-4 bg-white shadow-sm hover:shadow-md transition">
+                                <div class="flex justify-between items-start border-b border-sky-50 pb-2 mb-3">
+                                    <span class="font-bold text-sky-800"><i class="ph-fill ph-hospital text-sky-500 mr-1"></i> วันที่เข้ารับการรักษา: ${formatDate(hr.date).split(' ')[0]}</span>
+                                    <button onclick="deleteHospitalRecord('${hr.id}')" class="text-red-400 hover:text-red-600 text-xs font-medium"><i class="ph ph-trash"></i> ลบ</button>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+                                    <div><span class="font-semibold text-gray-500 block mb-1">อาการ / Diagnosis:</span> ${hr.diagnosis || '-'}</div>
+                                    <div><span class="font-semibold text-gray-500 block mb-1">สถานะเมื่อจำหน่าย:</span> <span class="bg-sky-50 text-sky-700 px-2 py-0.5 rounded">${hr.dischargeStatus || '-'}</span></div>
+                                    <div class="md:col-span-2"><span class="font-semibold text-gray-500 block mb-1">การรักษา (Treatment):</span> <p class="whitespace-pre-wrap text-sm">${hr.treatment || '-'}</p></div>
+                                    ${hr.note ? `<div class="md:col-span-2 mt-2 pt-2 border-t border-dashed border-gray-200"><span class="font-semibold text-gray-500 text-xs">หมายเหตุเพิ่มเติม:</span> <p class="text-xs text-gray-500 mt-1">${hr.note}</p></div>` : ''}
+                                </div>
+                            </div>
+                        `).join('') : '<div class="text-center text-gray-400 py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">ยังไม่มีประวัติการรักษาในโรงพยาบาลทับคล้อ</div>'
+                        }
+                    </div>
+                `;
+            }
+            else if(state.detailTab === 'acp') {
+                const acpList = p.acpRecords || [];
+                tabContent = `
+                    <div class="mb-4 flex justify-between items-center bg-amber-50 p-4 rounded-xl border border-amber-200">
+                        <div>
+                            <h4 class="font-bold text-amber-900 text-lg">แบบบันทึก Advanced Care Plan (ACP)</h4>
+                            <p class="text-xs text-amber-700 mt-1">ประวัติการปรับเป้าหมายการรักษาล่วงหน้า และสถานะ POLST ปัจจุบัน</p>
+                        </div>
+                        <button onclick="openAcpModal()" class="px-3 py-2 bg-amber-600 text-white text-xs rounded-lg hover:bg-amber-700 shadow font-bold whitespace-nowrap"><i class="ph ph-plus"></i> อัปเดต ACP</button>
+                    </div>
+
+                    <div class="mb-6 p-4 border rounded-xl bg-white shadow-sm">
+                        <span class="font-bold text-gray-600 text-sm">POLST (สถานะกู้ชีพหลัก):</span> 
+                        <span class="ml-2 font-bold ${p.polst?.includes('DNR') ? 'text-red-600' : 'text-green-600'}">${p.polst || 'ไม่ได้ระบุ'}</span>
+                    </div>
+
+                    <h5 class="font-bold text-gray-700 mb-3 text-sm"><i class="ph ph-clock-counter-clockwise"></i> ประวัติการอัปเดตเป้าหมาย (Timeline)</h5>
+                    <div class="space-y-4">
+                        ${acpList.length > 0 ? 
+                        acpList.sort((a,b) => new Date(b.date) - new Date(a.date)).map((acp, index) => `
+                            <div class="border ${index === 0 ? 'border-amber-300 shadow-md' : 'border-gray-200'} rounded-xl p-4 bg-white relative">
+                                ${index === 0 ? '<span class="absolute -top-3 left-4 bg-amber-500 text-white px-2 py-0.5 text-[10px] font-bold rounded-full shadow-sm">ล่าสุด (Current)</span>' : ''}
+                                <div class="flex justify-between items-end border-b border-gray-100 pb-2 mb-3 mt-1">
+                                    <div>
+                                        <span class="font-bold text-gray-800 text-sm">วันที่ประเมิน: ${formatDate(acp.date).split(' ')[0]}</span>
+                                        <span class="text-[11px] text-gray-500 ml-2">ผู้บันทึก: ${acp.recordedBy || '-'}</span>
+                                    </div>
+                                    <button onclick="deleteAcpRecord('${acp.id}')" class="text-red-400 hover:text-red-600 text-xs font-medium"><i class="ph ph-trash"></i> ลบ</button>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-3 mb-3">
+                                    <h6 class="text-xs font-bold text-gray-600 mb-2 border-b border-gray-200 pb-1">เป้าหมายที่ปฏิเสธการรักษา (Goals of Care Limits):</h6>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4 text-xs">
+                                        ${acpGoals.map((id, i) => {
+                                            const isChecked = acp['no'+id];
+                                            return `<div class="${isChecked ? 'text-red-600 font-bold' : 'text-gray-400'} flex items-center gap-1.5"><i class="${isChecked ? 'ph-fill ph-check-square' : 'ph ph-square'} text-sm"></i> ${acpLabels[i]}</div>`;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h6 class="text-xs font-bold text-gray-600 mb-1">รายละเอียด/บริบทของครอบครัว:</h6>
+                                    <p class="text-xs text-gray-700 whitespace-pre-wrap">${acp.note || '-'}</p>
+                                </div>
+                            </div>
+                        `).join('') : '<div class="text-center text-gray-400 py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">ยังไม่มีประวัติการบันทึก ACP แบบละเอียด</div>'
+                        }
+                    </div>
+                `;
+            }
             else if(state.detailTab === 'medical') {
                 tabContent = `
                     <div class="space-y-6">
@@ -839,38 +917,47 @@
                             </div>
                         </div>
 
-                        <!-- สั่งยา -->
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b pb-2 gap-2">
-                            <h4 class="font-bold text-purple-800 text-lg">ประวัติใบสั่งยา (Prescriptions)</h4>
-                            <div class="flex gap-2 w-full md:w-auto">
-                                <button onclick="openRemedicationModal('${p.id}')" class="flex-1 md:flex-none bg-teal-600 text-white px-3 py-2 rounded-lg font-bold shadow hover:bg-teal-700 text-xs">
-                                    <i class="ph ph-arrows-clockwise"></i> Remedication (สั่งยาเดิม)
+                        <!-- สั่งยาและค้นหา -->
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b pb-3 gap-3">
+                            <div class="flex-1 w-full md:w-auto">
+                                <h4 class="font-bold text-purple-800 text-lg mb-2">ประวัติใบสั่งยา (Prescriptions)</h4>
+                                <div class="relative w-full md:w-72">
+                                    <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                    <input type="text" id="rx_search_input" oninput="filterRxList()" placeholder="ค้นหาชื่อยา, แพทย์, หรือสถานะ..." class="w-full pl-9 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 transition-all">
+                                </div>
+                            </div>
+                            <div class="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
+                                <button onclick="openRemedicationModal('${p.id}')" class="flex-1 md:flex-none bg-teal-600 text-white px-3 py-2 rounded-lg font-bold shadow hover:bg-teal-700 text-xs flex items-center justify-center gap-1">
+                                    <i class="ph ph-arrows-clockwise text-base"></i> Remedication
                                 </button>
-                                <button onclick="openPrescriptionModal('${p.id}')" class="flex-1 md:flex-none bg-purple-600 text-white px-3 py-2 rounded-lg font-bold shadow hover:bg-purple-700 text-xs">
-                                    <i class="ph ph-plus"></i> สั่งยาใหม่
+                                <button onclick="openPrescriptionModal('${p.id}')" class="flex-1 md:flex-none bg-purple-600 text-white px-3 py-2 rounded-lg font-bold shadow hover:bg-purple-700 text-xs flex items-center justify-center gap-1">
+                                    <i class="ph ph-plus text-base"></i> สั่งยาใหม่
                                 </button>
                             </div>
                         </div>
 
                         <!-- รายการประวัติสั่งยา -->
-                        <div class="space-y-4">
+                        <div id="rx_history_list" class="space-y-4">
                             ${rxList.length === 0 ? '<p class="text-center text-gray-400 py-6">ไม่มีประวัติใบสั่งยา</p>' : rxList.map((rx, idx) => {
-                                // Calculate original index because we sorted it for display
-                                const originalIdx = p.prescriptions.findIndex(orig => orig.id === rx.id);
-
-                                let sBadge = '', action = '';
+                                let sBadge = '', action = '', statusText = '';
                                 if(rx.status === 'pending_pharmacy') {
                                     sBadge = '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">แพทย์สั่งจ่ายยาแล้ว 🟡</span>';
                                     action = `<button onclick="updateRxStatus('${p.id}', '${rx.id}', 'dispensed')" class="mt-2 w-full bg-purple-600 text-white py-1.5 rounded text-xs font-bold">รับเรื่องจ่ายยา (Pharmacist)</button>`;
+                                    statusText = 'pending แพทย์สั่งจ่ายยาแล้ว';
                                 } else if (rx.status === 'dispensed') {
                                     sBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">เภสัชกรจ่ายยาแล้ว 🔵</span>';
                                     action = `<button onclick="updateRxStatus('${p.id}', '${rx.id}', 'received')" class="mt-2 w-full bg-emerald-600 text-white py-1.5 rounded text-xs font-bold">เจ้าหน้าที่รับยาแล้ว (Caregiver)</button>`;
+                                    statusText = 'dispensed เภสัชกรจ่ายยาแล้ว';
                                 } else {
                                     sBadge = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">เจ้าหน้าที่รับยาแล้ว 🟢</span>';
+                                    statusText = 'received เจ้าหน้าที่รับยาแล้ว';
                                 }
 
+                                const medNames = rx.items.map(i => i.medName).join(' ');
+                                const searchData = `${rx.doctor || ''} ${rx.pharmacist || ''} ${rx.receiver || ''} ${medNames} ${statusText} ${formatDate(rx.date)}`;
+
                                 return `
-                                <div class="border rounded-xl p-4 bg-white shadow-sm flex flex-col md:flex-row gap-4 relative">
+                                <div class="rx-item-card border rounded-xl p-4 bg-white shadow-sm flex flex-col md:flex-row gap-4 relative" data-search="${searchData}">
                                     <button onclick="openEditRxModal('${p.id}', '${rx.id}')" class="absolute top-4 right-4 text-gray-400 hover:text-sky-600 text-xs font-medium"><i class="ph ph-pencil-simple"></i> แก้ไข</button>
                                     
                                     <div class="md:w-1/4 border-b md:border-b-0 md:border-r pb-2 md:pr-4">
@@ -884,45 +971,13 @@
                                     <div class="md:w-3/4 text-sm mt-2 md:mt-0">
                                         <h5 class="font-bold text-gray-700 mb-1 border-b pb-1">รายการยา</h5>
                                         <ul class="mb-3 space-y-1">
-                                            ${rx.items.map(i => `<li>- <span class="font-semibold">${i.medName}</span> : ${i.dose} (${i.freq})</li>`).join('')}
+                                            ${rx.items.map(i => `<li>- <span class="font-semibold text-purple-800">${i.medName}</span> : <span class="text-gray-600">${i.dose} (${i.freq})</span></li>`).join('')}
                                         </ul>
                                         ${rx.plan ? `<div class="bg-gray-50 p-2 text-xs rounded text-gray-700"><b>แผนการรักษา:</b><br>${rx.plan}</div>` : ''}
                                     </div>
                                 </div>
                                 `
                             }).join('')}
-                        </div>
-                    </div>
-
-                    <!-- Modal สั่งยา/แก้ไขยา -->
-                    <div id="rxModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                        <div class="bg-white rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-                            <h3 id="rx_modal_title" class="text-lg font-bold text-purple-800 border-b pb-2 mb-4"><i class="ph-fill ph-stethoscope"></i> สั่งยา / ปรับยา (Prescription)</h3>
-                            ${hasAllergy ? `<div class="bg-red-50 text-red-700 p-3 rounded mb-4 text-sm font-bold border border-red-200">⚠️ ผู้ป่วยแพ้ยา: ${p.allergies}</div>` : ''}
-                            
-                            <form onsubmit="handleSaveRx(event)" class="space-y-4">
-                                <div><label class="block text-xs mb-1">ชื่อแพทย์ผู้สั่ง (หรือผู้แก้ไข)</label><input type="text" id="rx_doctor" class="w-full border p-2 rounded text-sm" required></div>
-                                
-                                <div class="border rounded p-3 bg-gray-50">
-                                    <label class="block text-xs font-bold text-sky-800 mb-2">รายการยา</label>
-                                    <div class="flex flex-col gap-2 mb-2">
-                                        <input type="text" id="rx_medName" placeholder="ชื่อยา" class="w-full border p-1.5 rounded text-sm">
-                                        <div class="flex gap-2">
-                                            <input type="text" id="rx_dose" placeholder="ขนาด (Dose)" class="w-1/2 border p-1.5 rounded text-sm">
-                                            <input type="text" id="rx_freq" placeholder="วิธีใช้ (Freq)" class="w-1/2 border p-1.5 rounded text-sm">
-                                        </div>
-                                    </div>
-                                    <button type="button" onclick="addRxItem()" class="w-full bg-sky-200 text-sky-800 py-1.5 rounded text-xs font-bold hover:bg-sky-300">เพิ่มลงในใบสั่ง</button>
-                                    <ul id="rx_temp_list" class="mt-2 space-y-1 text-xs text-gray-700 bg-white rounded"></ul>
-                                </div>
-
-                                <div><label class="block text-xs mb-1">แผนการรักษา/เหตุผล</label><textarea id="rx_plan" class="w-full border p-2 rounded h-16 text-sm"></textarea></div>
-                                
-                                <div class="flex justify-end gap-2 pt-2">
-                                    <button type="button" onclick="closePrescriptionModal()" class="px-4 py-2 bg-gray-200 rounded text-sm font-medium">ยกเลิก</button>
-                                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded text-sm font-bold">บันทึกข้อมูลใบสั่งยา</button>
-                                </div>
-                            </form>
                         </div>
                     </div>
                 `;
@@ -962,51 +1017,6 @@
                             <tbody>${recordRows || '<tr><td colspan="12" class="text-center py-6 text-gray-400">ไม่มีข้อมูล</td></tr>'}</tbody>
                         </table>
                     </div>
-
-                    <!-- Modal Daily Record -->
-                    <div id="dailyRecordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5">
-                            <div class="flex justify-between items-center mb-3">
-                                <h3 id="dr_modal_title" class="text-lg font-bold text-gray-800">บันทึกอาการประจำวัน</h3>
-                                <button type="button" onclick="closeDailyRecordForm()" class="text-gray-400 hover:text-gray-600"><i class="ph ph-x text-xl"></i></button>
-                            </div>
-                            <form onsubmit="handleSaveDailyRecord(event, '${p.id}')" class="space-y-4">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div><label class="block text-xs mb-1">วันที่เวลา</label><input type="datetime-local" id="dr_date" class="w-full border rounded p-1.5 text-xs" required></div>
-                                    <div><label class="block text-xs mb-1">ผู้บันทึก</label><input type="text" id="dr_recorder" class="w-full border rounded p-1.5 text-xs" required></div>
-                                </div>
-                                <div class="bg-sky-50 p-2 rounded">
-                                    <h4 class="text-xs font-bold text-sky-800 mb-2">Vitals Sign</h4>
-                                    <div class="grid grid-cols-5 gap-2 text-xs">
-                                        <div><label class="block text-[10px]">BP</label><input type="text" id="dr_bp" class="w-full border rounded p-1"></div>
-                                        <div><label class="block text-[10px]">HR</label><input type="number" id="dr_hr" class="w-full border rounded p-1"></div>
-                                        <div><label class="block text-[10px]">RR</label><input type="number" id="dr_rr" class="w-full border rounded p-1"></div>
-                                        <div><label class="block text-[10px]">Temp</label><input type="number" step="0.1" id="dr_temp" class="w-full border rounded p-1"></div>
-                                        <div><label class="block text-[10px]">SpO2</label><input type="number" id="dr_o2" class="w-full border rounded p-1"></div>
-                                    </div>
-                                </div>
-                                <div class="bg-orange-50 p-2 rounded">
-                                    <h4 class="text-xs font-bold text-orange-800 mb-2">Symptom Score (0-10)</h4>
-                                    <div class="grid grid-cols-4 gap-2 text-xs">
-                                        <div><label class="block text-[10px]">ปวด</label><input type="number" min="0" max="10" id="dr_pain" class="w-full border rounded p-1" value="0"></div>
-                                        <div><label class="block text-[10px]">เหนื่อย</label><input type="number" min="0" max="10" id="dr_dyspnea" class="w-full border rounded p-1" value="0"></div>
-                                        <div><label class="block text-[10px]">ซึมเศร้า</label><input type="number" min="0" max="10" id="dr_dep" class="w-full border rounded p-1" value="0"></div>
-                                        <div><label class="block text-[10px]">ท้องผูก</label><input type="number" min="0" max="10" id="dr_cons" class="w-full border rounded p-1" value="0"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-bold text-gray-700 mb-2">บันทึกของทีมสหสาขาวิชาชีพ (MDT)</h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                                        <textarea id="dr_note_doctor" class="border rounded p-1.5 h-12" placeholder="แพทย์..."></textarea>
-                                        <textarea id="dr_note_nurse" class="border rounded p-1.5 h-12" placeholder="พยาบาล..."></textarea>
-                                        <textarea id="dr_note_pt" class="border rounded p-1.5 h-12" placeholder="นักกายภาพ..."></textarea>
-                                        <textarea id="dr_note_other" class="border rounded p-1.5 h-12" placeholder="อื่นๆ/จิตวิญญาณ..."></textarea>
-                                    </div>
-                                </div>
-                                <div class="flex justify-end pt-2"><button type="submit" id="dr_submit_btn" class="bg-sky-600 text-white px-6 py-2 rounded shadow font-bold text-sm">บันทึก</button></div>
-                            </form>
-                        </div>
-                    </div>
                 `;
 
                 setTimeout(() => {
@@ -1036,6 +1046,138 @@
                     ${hasAllergy ? `<div class="allergy-alert text-red-800 font-bold p-2 text-xs rounded mb-4 text-center shadow-sm border border-red-300">⚠️ ผู้ป่วยมีประวัติแพ้ยา: ${p.allergies}</div>` : ''}
                     ${tabHeader}
                     <div class="min-h-[300px] mt-4">${tabContent}</div>
+                </div>
+
+                <!-- ALL MODALS INJECTED HERE FOR PATIENT DETAIL -->
+                
+                <!-- Rx Modal -->
+                <div id="rxModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+                        <h3 id="rx_modal_title" class="text-lg font-bold text-purple-800 border-b pb-2 mb-4"><i class="ph-fill ph-stethoscope"></i> สั่งยา / ปรับยา (Prescription)</h3>
+                        ${hasAllergy ? `<div class="bg-red-50 text-red-700 p-3 rounded mb-4 text-sm font-bold border border-red-200">⚠️ ผู้ป่วยแพ้ยา: ${p.allergies}</div>` : ''}
+                        
+                        <form onsubmit="handleSaveRx(event)" class="space-y-4">
+                            <div><label class="block text-xs mb-1">ชื่อแพทย์ผู้สั่ง (หรือผู้แก้ไข)</label><input type="text" id="rx_doctor" class="w-full border p-2 rounded text-sm" required></div>
+                            
+                            <div class="border border-purple-100 rounded-xl p-3 bg-purple-50/50">
+                                <label class="block text-sm font-bold text-purple-800 mb-2"><i class="ph-fill ph-pills"></i> จัดการรายการยา</label>
+                                <div class="flex flex-col gap-2 mb-2 bg-white p-2 rounded border">
+                                    <input type="text" id="rx_medName" placeholder="ชื่อยา" class="w-full border p-1.5 rounded text-sm focus:ring-1 focus:ring-purple-500">
+                                    <div class="flex gap-2">
+                                        <input type="text" id="rx_dose" placeholder="ขนาด (Dose)" class="w-1/2 border p-1.5 rounded text-sm focus:ring-1 focus:ring-purple-500">
+                                        <input type="text" id="rx_freq" placeholder="วิธีใช้ (Freq)" class="w-1/2 border p-1.5 rounded text-sm focus:ring-1 focus:ring-purple-500">
+                                    </div>
+                                    <button type="button" onclick="addRxItem()" class="w-full bg-purple-100 text-purple-800 py-1.5 rounded text-xs font-bold hover:bg-purple-200 mt-1">เพิ่มลงในใบสั่ง</button>
+                                </div>
+                                <ul id="rx_temp_list" class="mt-3 space-y-1 text-xs text-gray-700 bg-white rounded border overflow-hidden"></ul>
+                            </div>
+
+                            <div><label class="block text-xs mb-1">แผนการรักษา/เหตุผล</label><textarea id="rx_plan" class="w-full border p-2 rounded h-16 text-sm"></textarea></div>
+                            
+                            <div class="flex justify-end gap-2 pt-2">
+                                <button type="button" onclick="closePrescriptionModal()" class="px-4 py-2 bg-gray-200 rounded text-sm font-medium hover:bg-gray-300">ยกเลิก</button>
+                                <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded text-sm font-bold hover:bg-purple-700">บันทึกข้อมูลใบสั่งยา</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Daily Record Modal -->
+                <div id="dailyRecordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 id="dr_modal_title" class="text-lg font-bold text-gray-800">บันทึกอาการประจำวัน</h3>
+                            <button type="button" onclick="closeDailyRecordForm()" class="text-gray-400 hover:text-gray-600"><i class="ph ph-x text-xl"></i></button>
+                        </div>
+                        <form onsubmit="handleSaveDailyRecord(event, '${p.id}')" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-xs mb-1">วันที่เวลา</label><input type="datetime-local" id="dr_date" class="w-full border rounded p-1.5 text-xs" required></div>
+                                <div><label class="block text-xs mb-1">ผู้บันทึก</label><input type="text" id="dr_recorder" class="w-full border rounded p-1.5 text-xs" required></div>
+                            </div>
+                            <div class="bg-sky-50 p-2 rounded">
+                                <h4 class="text-xs font-bold text-sky-800 mb-2">Vitals Sign</h4>
+                                <div class="grid grid-cols-5 gap-2 text-xs">
+                                    <div><label class="block text-[10px]">BP</label><input type="text" id="dr_bp" class="w-full border rounded p-1"></div>
+                                    <div><label class="block text-[10px]">HR</label><input type="number" id="dr_hr" class="w-full border rounded p-1"></div>
+                                    <div><label class="block text-[10px]">RR</label><input type="number" id="dr_rr" class="w-full border rounded p-1"></div>
+                                    <div><label class="block text-[10px]">Temp</label><input type="number" step="0.1" id="dr_temp" class="w-full border rounded p-1"></div>
+                                    <div><label class="block text-[10px]">SpO2</label><input type="number" id="dr_o2" class="w-full border rounded p-1"></div>
+                                </div>
+                            </div>
+                            <div class="bg-orange-50 p-2 rounded">
+                                <h4 class="text-xs font-bold text-orange-800 mb-2">Symptom Score (0-10)</h4>
+                                <div class="grid grid-cols-4 gap-2 text-xs">
+                                    <div><label class="block text-[10px]">ปวด</label><input type="number" min="0" max="10" id="dr_pain" class="w-full border rounded p-1" value="0"></div>
+                                    <div><label class="block text-[10px]">เหนื่อย</label><input type="number" min="0" max="10" id="dr_dyspnea" class="w-full border rounded p-1" value="0"></div>
+                                    <div><label class="block text-[10px]">ซึมเศร้า</label><input type="number" min="0" max="10" id="dr_dep" class="w-full border rounded p-1" value="0"></div>
+                                    <div><label class="block text-[10px]">ท้องผูก</label><input type="number" min="0" max="10" id="dr_cons" class="w-full border rounded p-1" value="0"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-gray-700 mb-2">บันทึกของทีมสหสาขาวิชาชีพ (MDT)</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                                    <textarea id="dr_note_doctor" class="border rounded p-1.5 h-12" placeholder="แพทย์..."></textarea>
+                                    <textarea id="dr_note_nurse" class="border rounded p-1.5 h-12" placeholder="พยาบาล..."></textarea>
+                                    <textarea id="dr_note_pt" class="border rounded p-1.5 h-12" placeholder="นักกายภาพ..."></textarea>
+                                    <textarea id="dr_note_other" class="border rounded p-1.5 h-12" placeholder="อื่นๆ/จิตวิญญาณ..."></textarea>
+                                </div>
+                            </div>
+                            <div class="flex justify-end pt-2"><button type="submit" id="dr_submit_btn" class="bg-sky-600 text-white px-6 py-2 rounded shadow font-bold text-sm">บันทึก</button></div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Hospital History Modal -->
+                <div id="hospitalModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl w-full max-w-lg p-6">
+                        <h3 class="text-lg font-bold text-sky-800 mb-4"><i class="ph-fill ph-hospital"></i> เพิ่มประวัติการรักษา รพ.ทับคล้อ</h3>
+                        <form onsubmit="handleSaveHospital(event)" class="space-y-3">
+                            <div><label class="block text-xs mb-1 font-bold">วันที่เข้ารับการรักษา</label><input type="date" id="hosp_date" class="w-full border p-2 rounded text-sm" required></div>
+                            <div><label class="block text-xs mb-1 font-bold">อาการ / Diagnosis</label><input type="text" id="hosp_dx" class="w-full border p-2 rounded text-sm" required placeholder="ระบุอาการสำคัญ หรือโรคที่วินิจฉัย"></div>
+                            <div><label class="block text-xs mb-1 font-bold">การรักษา (Treatment)</label><textarea id="hosp_tx" class="w-full border p-2 rounded text-sm h-16" placeholder="หัตถการ ยาที่ให้..."></textarea></div>
+                            <div><label class="block text-xs mb-1 font-bold">สถานะจำหน่าย</label><input type="text" id="hosp_status" class="w-full border p-2 rounded text-sm" placeholder="เช่น กลับบ้าน อาการดีขึ้น ทุเลา เสียชีวิต..."></div>
+                            <div><label class="block text-xs mb-1 font-bold">หมายเหตุเพิ่มเติม</label><textarea id="hosp_note" class="w-full border p-2 rounded text-sm h-16"></textarea></div>
+                            <div class="flex justify-end gap-2 pt-2">
+                                <button type="button" onclick="document.getElementById('hospitalModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm">ยกเลิก</button>
+                                <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded text-sm font-bold">บันทึกประวัติ</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ACP Modal -->
+                <div id="acpModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto">
+                        <h3 class="text-lg font-bold text-amber-800 mb-4"><i class="ph-fill ph-file-text"></i> อัปเดตแบบบันทึก Advanced Care Plan</h3>
+                        <form onsubmit="handleSaveAcp(event)" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-xs font-bold mb-1">วันที่ประเมิน</label><input type="date" id="acp_date" class="w-full border p-2 rounded text-sm" required></div>
+                                <div><label class="block text-xs font-bold mb-1">ผู้บันทึก/ประเมิน</label><input type="text" id="acp_recorder" class="w-full border p-2 rounded text-sm" required></div>
+                            </div>
+                            
+                            <div class="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                                <label class="block text-sm font-bold text-amber-900 mb-3 border-b border-amber-200 pb-2">เป้าหมายการรักษาล่วงหน้า (กรุณาติ๊กเลือกข้อที่ต้องการ <span class="text-red-600">ปฏิเสธ</span>)</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                    ${acpGoals.map((id, index) => `
+                                        <label class="flex items-center gap-2 cursor-pointer hover:bg-amber-100 p-1 rounded transition">
+                                            <input type="checkbox" id="acp_No${id}" class="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-gray-300"> 
+                                            <span class="text-gray-800">${acpLabels[index]}</span>
+                                        </label>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold mb-1">รายละเอียด/บริบทของครอบครัวเพิ่มเติม</label>
+                                <textarea id="acp_note" class="w-full border p-3 rounded text-sm h-24" placeholder="เช่น บริบทของครอบครัว, ผู้ตัดสินใจหลักคือใคร, สาเหตุการเปลี่ยนเป้าหมาย..."></textarea>
+                            </div>
+                            
+                            <div class="flex justify-end gap-2 pt-2 border-t">
+                                <button type="button" onclick="document.getElementById('acpModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm">ยกเลิก</button>
+                                <button type="submit" class="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-bold shadow">บันทึก ACP</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- Discharge Modal -->
@@ -1091,10 +1233,8 @@
                             <h3 class="font-bold bg-gray-200 p-1 mb-2 mt-4">2. ข้อมูลการแพทย์ & แผนล่วงหน้า</h3>
                             <p><b>Diagnosis:</b> ${p.diagnosis||'-'}</p>
                             <p><b>โรคประจำตัว:</b> ${p.underlyingDiseases||'-'}</p>
-                            <p><b>ประวัติ รพ:</b> ${p.hospitalHistory||'-'}</p>
                             <p class="mt-2 text-red-600"><b>POLST:</b> ${p.polst||'-'}</p>
-                            <p><b>ACP:</b> ${p.acp||'-'}</p>
-                            <p><b>Other Labs:</b> ${p.otherLabs||'-'}</p>
+                            <p><b>ACP เบื้องต้น:</b> ${p.acp||'-'}</p>
                         </div>
 
                         <!-- PAGE 2 (Page Break) -->
@@ -1105,11 +1245,9 @@
                                 ${p.medicationsList && p.medicationsList.length>0 ? p.medicationsList.map(m=>`<li>- ${m.name} : ${m.dosage} (${m.frequency})</li>`).join('') : '<li>-</li>'}
                             </ul>
                             
-                            <h3 class="font-bold bg-gray-200 p-1 mb-2 mt-4">4. ผลเลือดประจำปี</h3>
-                            <table class="w-full text-[9px] text-left border">
-                                <tr class="bg-gray-100"><th class="border p-1">ปี</th><th class="border p-1">FBS</th><th class="border p-1">HbA1C</th><th class="border p-1">eGFR</th><th class="border p-1">Chol</th><th class="border p-1">HDL</th><th class="border p-1">LDL</th><th class="border p-1">TG</th></tr>
-                                ${p.bloodTestsList && p.bloodTestsList.length>0 ? p.bloodTestsList.map(b=>`<tr><td class="border p-1">${b.year}</td><td class="border p-1">${b.fbs||'-'}</td><td class="border p-1">${b.hba1c||'-'}</td><td class="border p-1">${b.egfr||'-'}</td><td class="border p-1">${b.chol||'-'}</td><td class="border p-1">${b.hdl||'-'}</td><td class="border p-1">${b.ldl||'-'}</td><td class="border p-1">${b.tg||'-'}</td></tr>`).join('') : '<tr><td colspan="8" class="text-center border p-1">-</td></tr>'}
-                            </table>
+                            <h3 class="font-bold bg-gray-200 p-1 mb-2 mt-4">4. สรุปประวัติ รพ. และ ACP</h3>
+                            <p class="text-[9px] mb-1"><b>ประวัติ รพ. ทับคล้อ:</b> ${p.hospitalRecords && p.hospitalRecords.length > 0 ? p.hospitalRecords.length + ' รายการ' : 'ไม่มี'}</p>
+                            <p class="text-[9px]"><b>บันทึกเป้าหมาย ACP:</b> ${p.acpRecords && p.acpRecords.length > 0 ? p.acpRecords.length + ' ครั้ง (รายละเอียดดูในระบบ)' : 'ไม่มีบันทึก'}</p>
 
                             <h3 class="font-bold bg-gray-200 p-1 mb-2 mt-4">5. บันทึกอาการและ MDT ล่าสุด</h3>
                             <table class="w-full text-[9px] text-left border">
@@ -1128,6 +1266,20 @@
                 </div>
             `;
         }
+
+        // --- FILTER PHARMACY RX LIST ---
+        window.filterRxList = function() {
+            const term = document.getElementById('rx_search_input').value.toLowerCase();
+            const cards = document.querySelectorAll('.rx-item-card');
+            cards.forEach(card => {
+                const text = card.getAttribute('data-search').toLowerCase();
+                if(text.includes(term)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        };
 
         // --- PHARMACY RX ACTIONS (ADD/EDIT/REMEDICATION) ---
         window.openPrescriptionModal = function(patientId) {
@@ -1188,11 +1340,14 @@
             const container = document.getElementById('rx_temp_list');
             if(!container) return;
             container.innerHTML = window.rxTempList.map((i, idx) => `
-                <li class="p-2 border-b flex justify-between items-center bg-gray-50">
-                    <span class="font-medium">${i.medName} <span class="text-gray-500 font-normal">- ${i.dose} (${i.freq})</span></span>
-                    <button type="button" onclick="removeRxItem(${idx})" class="text-red-500 hover:text-red-700 p-1"><i class="ph ph-trash"></i></button>
+                <li class="p-2 border-b flex justify-between items-center hover:bg-gray-50 transition">
+                    <span class="font-medium text-purple-900">${i.medName} <span class="text-gray-500 font-normal ml-1">${i.dose} (${i.freq})</span></span>
+                    <div class="flex gap-1">
+                        <button type="button" onclick="editRxItem(${idx})" class="text-sky-500 hover:text-sky-700 bg-sky-50 p-1.5 rounded" title="แก้ไข"><i class="ph ph-pencil-simple"></i></button>
+                        <button type="button" onclick="removeRxItem(${idx})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="ลบ"><i class="ph ph-trash"></i></button>
+                    </div>
                 </li>
-            `).join('') || '<li class="text-center text-gray-400 py-2">ยังไม่มีรายการยา</li>';
+            `).join('') || '<li class="text-center text-gray-400 py-3 bg-gray-50">ยังไม่มีรายการยา</li>';
         }
 
         window.addRxItem = function() {
@@ -1202,6 +1357,16 @@
             if(!mName) return;
             window.rxTempList.push({ medName: mName, dose: mDose, freq: mFreq });
             document.getElementById('rx_medName').value=''; document.getElementById('rx_dose').value=''; document.getElementById('rx_freq').value='';
+            renderRxTempList();
+        };
+
+        window.editRxItem = function(idx) {
+            const item = window.rxTempList[idx];
+            document.getElementById('rx_medName').value = item.medName;
+            document.getElementById('rx_dose').value = item.dose;
+            document.getElementById('rx_freq').value = item.freq;
+            // Remove it so it can be added back updated
+            window.rxTempList.splice(idx, 1);
             renderRxTempList();
         };
 
@@ -1246,6 +1411,101 @@
                 closePrescriptionModal();
                 await fetchInitialData();
             } catch(err) { alert('Error: ' + err.message); }
+        };
+
+        // --- HOSPITAL HISTORY ACTIONS ---
+        window.openHospitalModal = function() {
+            document.getElementById('hosp_date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('hosp_dx').value = '';
+            document.getElementById('hosp_tx').value = '';
+            document.getElementById('hosp_status').value = '';
+            document.getElementById('hosp_note').value = '';
+            document.getElementById('hospitalModal').classList.remove('hidden');
+        };
+
+        window.handleSaveHospital = async function(e) {
+            e.preventDefault();
+            const patientId = state.selectedPatientId;
+            const p = state.patients.find(x => x.id === patientId);
+            let records = p.hospitalRecords || [];
+            
+            records.push({
+                id: 'HOSP' + Date.now(),
+                date: document.getElementById('hosp_date').value,
+                diagnosis: document.getElementById('hosp_dx').value,
+                treatment: document.getElementById('hosp_tx').value,
+                dischargeStatus: document.getElementById('hosp_status').value,
+                note: document.getElementById('hosp_note').value
+            });
+
+            try {
+                const { error } = await supabaseClient.from('patients').update({ hospitalRecords: records }).eq('id', patientId);
+                if (error) throw error;
+                document.getElementById('hospitalModal').classList.add('hidden');
+                await fetchInitialData();
+            } catch (err) { alert('Error: ' + err.message); }
+        };
+
+        window.deleteHospitalRecord = async function(recordId) {
+            if(!confirm('คุณต้องการลบประวัติการรักษานี้ใช่หรือไม่?')) return;
+            const patientId = state.selectedPatientId;
+            const p = state.patients.find(x => x.id === patientId);
+            let records = p.hospitalRecords.filter(x => x.id !== recordId);
+            try {
+                const { error } = await supabaseClient.from('patients').update({ hospitalRecords: records }).eq('id', patientId);
+                if (error) throw error;
+                await fetchInitialData();
+            } catch (err) { alert('Error: ' + err.message); }
+        };
+
+        // --- ACP RECORDS ACTIONS ---
+        window.openAcpModal = function() {
+            document.getElementById('acp_date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('acp_recorder').value = '';
+            acpGoals.forEach(id => {
+                document.getElementById('acp_No' + id).checked = false;
+            });
+            document.getElementById('acp_note').value = '';
+            document.getElementById('acpModal').classList.remove('hidden');
+        };
+
+        window.handleSaveAcp = async function(e) {
+            e.preventDefault();
+            const patientId = state.selectedPatientId;
+            const p = state.patients.find(x => x.id === patientId);
+            let records = p.acpRecords || [];
+            
+            const newAcp = {
+                id: 'ACP' + Date.now(),
+                date: document.getElementById('acp_date').value,
+                recordedBy: document.getElementById('acp_recorder').value,
+                note: document.getElementById('acp_note').value
+            };
+            
+            acpGoals.forEach(id => {
+                newAcp['no' + id] = document.getElementById('acp_No' + id).checked;
+            });
+
+            records.push(newAcp);
+
+            try {
+                const { error } = await supabaseClient.from('patients').update({ acpRecords: records }).eq('id', patientId);
+                if (error) throw error;
+                document.getElementById('acpModal').classList.add('hidden');
+                await fetchInitialData();
+            } catch (err) { alert('Error: ' + err.message); }
+        };
+
+        window.deleteAcpRecord = async function(recordId) {
+            if(!confirm('คุณต้องการลบแบบบันทึกเป้าหมาย ACP นี้ใช่หรือไม่?')) return;
+            const patientId = state.selectedPatientId;
+            const p = state.patients.find(x => x.id === patientId);
+            let records = p.acpRecords.filter(x => x.id !== recordId);
+            try {
+                const { error } = await supabaseClient.from('patients').update({ acpRecords: records }).eq('id', patientId);
+                if (error) throw error;
+                await fetchInitialData();
+            } catch (err) { alert('Error: ' + err.message); }
         };
 
         // --- DAILY RECORD ACTIONS (ADD / EDIT / DELETE) ---
