@@ -793,6 +793,10 @@
 
             const hasAllergy = p.allergies && p.allergies.trim() !== '' && p.allergies.trim() !== '-';
             
+            // แก้ไข: ดึงตัวแปรยาและใบสั่งยามาไว้ด้านบนสุด เพื่อป้องกันไม่ให้ PDF Template หาตัวแปรไม่เจอ
+            const medsList = p.medicationsList || [];
+            const rxList = [...(p.prescriptions || [])].sort((a,b) => new Date(b.date) - new Date(a.date));
+
             // TABS
             const tabs = [
                 { id: 'info', label: 'ข้อมูลทั่วไป' },
@@ -950,9 +954,6 @@
                 }, 100);
             }
             else if(state.detailTab === 'pharmacy') {
-                const medsList = p.medicationsList || [];
-                const rxList = [...(p.prescriptions || [])].sort((a,b) => new Date(b.date) - new Date(a.date));
-
                 tabContent = `
                     <div class="space-y-4 md:space-y-6">
                         <!-- รายการยาปัจจุบัน -->
